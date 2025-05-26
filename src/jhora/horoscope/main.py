@@ -72,7 +72,9 @@ class Horoscope():
         try:
             from jhora.horoscope.chart.drekkana_fix import get_22nd_drekkana
             place = drik.Place(self.place_name,self.latitude,self.longitude,self.timezone_offset)
-            drekkana_positions = charts.drekkana_chart(self.julian_day, place, ayanamsa_mode, 3)
+            # First get rasi chart positions, then convert to drekkana
+            rasi_positions = charts.rasi_chart(self.julian_day, place, ayanamsa_mode)
+            drekkana_positions = charts.drekkana_chart(rasi_positions)
             self._22nd_drekkana = get_22nd_drekkana(drekkana_positions)
         except Exception as e:
             print(f"Error calculating 22nd drekkana: {e}")
@@ -1736,7 +1738,11 @@ if __name__ == "__main__":
                                             count_from_end_of_sign=count_from_end_of_sign, varnada_method=1)
     
     # Import and use formatting functions
-    from . import format_utils
+    try:
+        from . import format_utils
+    except ImportError:
+        # Handle case when running as script directly
+        import format_utils
     
     # Format and display the results
     print("=== FORMATTED CALENDAR INFO ===")
