@@ -2,7 +2,7 @@ modules = ["python-3.8", "web"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["exiftool", "freefont_ttf", "ghostscript", "glibcLocales", "imagemagickBig", "mupdf", "netpbm", "poppler_utils"]
+packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib"]
 
 [workflows]
 runButton = "Run"
