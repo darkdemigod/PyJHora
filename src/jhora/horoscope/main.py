@@ -57,7 +57,13 @@ class Horoscope():
         self.Date = date_in
         self.birth_time = birth_time
         self.pravesha_type = pravesha_type
-        self._22nd_drekkana = {}
+        self.try:
+		from jhora.horoscope.chart.drekkana_fix import get_22nd_drekkana
+		drekkana_positions = charts.drekkana_chart(jd, place, ayanamsa_mode, divisional_chart_factor)
+		_22nd_drekkana = get_22nd_drekkana(drekkana_positions)
+	except Exception as e:
+		print(f"Error calculating 22nd drekkana: {e}")
+		_22nd_drekkana = {}
         self._64th_navamsa = {}
         #self.ayanamsa_mode = ayanamsa_mode
         #self.ayanamsa_value = ayanamsa_value
