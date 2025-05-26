@@ -29,6 +29,10 @@
 """
 import swisseph as swe
 from datetime import date
+import sys
+import os
+# Add the parent directory to Python path to find jhora module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from jhora import const, utils
 from jhora.panchanga import drik, surya_sidhantha
 from jhora.horoscope.chart import house,charts
