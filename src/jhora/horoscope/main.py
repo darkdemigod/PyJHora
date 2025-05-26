@@ -59,7 +59,8 @@ class Horoscope():
         self.pravesha_type = pravesha_type
         try:
             from jhora.horoscope.chart.drekkana_fix import get_22nd_drekkana
-            drekkana_positions = charts.drekkana_chart(jd, place, ayanamsa_mode, divisional_chart_factor)
+            place = drik.Place(self.place_name,self.latitude,self.longitude,self.timezone_offset)
+            drekkana_positions = charts.drekkana_chart(self.julian_day, place, ayanamsa_mode, 3)
             self._22nd_drekkana = get_22nd_drekkana(drekkana_positions)
         except Exception as e:
             print(f"Error calculating 22nd drekkana: {e}")
