@@ -39,3 +39,10 @@ python-dateutil
 pytz
 requests
 timezonefinder
+flask
+flask
+geocoder
+geopy
+pyswisseph
+pytz
+timezonefinder
