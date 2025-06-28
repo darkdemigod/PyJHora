@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JHora 4.5.0 - Vedic Astrology</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .feature-card p {
+            color: #718096;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .navigation {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕉️ JHora 4.5.0</h1>
+            <p>Complete Vedic Astrology Software</p>
+        </div>
+        
+        <div class="navigation">
+            <div class="nav-links">
+                <a href="/panchanga">📅 Panchanga</a>
+                <a href="/horoscope">🎯 Horoscope</a>
+                <a href="/compatibility">💕 Compatibility</a>
+                <a href="/dhasa">⏰ Dhasa</a>
+                <a href="/calendar">📆 Calendar</a>
+            </div>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Daily Panchanga</h3>
+                <p>Calculate Tithi, Nakshatra, Yoga, Karana, and other daily astrological information with precise astronomical calculations.</p>
+                <a href="/panchanga" class="btn">Calculate Panchanga</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Horoscope Charts</h3>
+                <p>Generate comprehensive birth charts including Rasi, Navamsa, and divisional charts with planetary positions and yogas.</p>
+                <a href="/horoscope" class="btn">Generate Chart</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💕</div>
+                <h3>Compatibility Matching</h3>
+                <p>Analyze marriage compatibility using traditional Ashtakoota system with detailed Porutham calculations.</p>
+                <a href="/compatibility" class="btn">Check Compatibility</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⏰</div>
+                <h3>Dhasa Periods</h3>
+                <p>Calculate Vimsottari and other dhasa systems to understand planetary periods and their influences.</p>
+                <a href="/dhasa" class="btn">Calculate Dhasa</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📆</div>
+                <h3>Vedic Calendar</h3>
+                <p>Interactive calendar showing daily panchanga information, festivals, and auspicious timings.</p>
+                <a href="/calendar" class="btn">View Calendar</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔮</div>
+                <h3>Advanced Features</h3>
+                <p>Ashtakavarga, Yogas, Doshas, Transits, and comprehensive astrological analysis tools.</p>
+                <a href="/horoscope" class="btn">Explore More</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2024 JHora - Open Source Vedic Astrology Software</p>
+            <p>Based on accurate Swiss Ephemeris calculations</p>
+        </div>
+    </div>
+</body>
+</html>

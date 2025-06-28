@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horoscope - JHora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f7fafc;
+        }
+        
+        .chart h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #4a5568;
+        }
+        
+        .planet-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .planet-item:last-child {
+            border-bottom: none;
+        }
+        
+        .yoga-item {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .yoga-name {
+            font-weight: bold;
+            color: #22543d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="nav-link">← Back to Home</a>
+            <h1>🎯 Birth Chart Analysis</h1>
+            <p>Generate comprehensive horoscope with planetary positions and yogas</p>
+        </div>
+        
+        <div class="card">
+            <form id="horoscopeForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Date of Birth:</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="time">Time of Birth:</label>
+                        <input type="time" id="time" name="time" value="12:00" required step="1">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="place">Place of Birth:</label>
+                        <input type="text" id="place" name="place" value="Chennai,IN" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="latitude">Latitude:</label>
+                        <input type="number" id="latitude" name="latitude" step="0.0001" value="13.0878" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="longitude">Longitude:</label>
+                        <input type="number" id="longitude" name="longitude" step="0.0001" value="80.2785" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="timezone">Timezone (hours from GMT):</label>
+                        <input type="number" id="timezone" name="timezone" step="0.5" value="5.5" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">Generate Horoscope</button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <p>Calculating horoscope...</p>
+            </div>
+            
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="charts-grid">
+                <div class="chart">
+                    <h3>Planetary Positions</h3>
+                    <div id="planetsContent"></div>
+                </div>
+                
+                <div class="chart">
+                    <h3>Important Yogas</h3>
+                    <div id="yogasContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Set today's date as default
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('horoscopeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/horoscope', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    showError(result.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+        });
+        
+        function displayResults(data) {
+            // Display planetary positions
+            const planetsContent = document.getElementById('planetsContent');
+            planetsContent.innerHTML = '';
+            
+            Object.entries(data.planets).forEach(([planet, info]) => {
+                const item = document.createElement('div');
+                item.className = 'planet-item';
+                item.innerHTML = `
+                    <span><strong>${planet}</strong></span>
+                    <span>${info.sign} (${info.longitude})</span>
+                `;
+                planetsContent.appendChild(item);
+            });
+            
+            // Display yogas
+            const yogasContent = document.getElementById('yogasContent');
+            yogasContent.innerHTML = '';
+            
+            if (data.yogas && data.yogas.length > 0) {
+                data.yogas.forEach(yoga => {
+                    const item = document.createElement('div');
+                    item.className = 'yoga-item';
+                    item.innerHTML = `
+                        <div class="yoga-name">${yoga.name}</div>
+                        <div>${yoga.description}</div>
+                    `;
+                    yogasContent.appendChild(item);
+                });
+            } else {
+                yogasContent.innerHTML = '<p>No special yogas detected or calculation in progress...</p>';
+            }
+            
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

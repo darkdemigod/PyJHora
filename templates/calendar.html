@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vedic Calendar - JHora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .calendar-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .calendar-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .calendar-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .current-month {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .calendar-header {
+            background: #4a5568;
+            color: white;
+            padding: 15px 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 10px 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+        
+        .calendar-day:hover {
+            background: #f0f9ff;
+        }
+        
+        .calendar-day.selected {
+            background: #ddd6fe;
+        }
+        
+        .calendar-day.other-month {
+            background: #f7fafc;
+            color: #a0aec0;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .day-info {
+            font-size: 0.8em;
+            color: #4a5568;
+            line-height: 1.2;
+        }
+        
+        .tithi-info {
+            color: #2b6cb0;
+            font-weight: bold;
+        }
+        
+        .nakshatra-info {
+            color: #c53030;
+        }
+        
+        .panchanga-info {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .panchanga-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #4a5568;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .info-value {
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="nav-link">← Back to Home</a>
+            <h1>📆 Vedic Calendar</h1>
+            <p>Interactive calendar with daily panchanga information</p>
+        </div>
+        
+        <div class="card">
+            <div class="calendar-controls">
+                <button class="calendar-nav" onclick="changeMonth(-1)">← Previous</button>
+                <div class="current-month" id="currentMonth"></div>
+                <button class="calendar-nav" onclick="changeMonth(1)">Next →</button>
+                <button class="calendar-nav" onclick="goToToday()">Today</button>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <div class="calendar-header">Sun</div>
+                <div class="calendar-header">Mon</div>
+                <div class="calendar-header">Tue</div>
+                <div class="calendar-header">Wed</div>
+                <div class="calendar-header">Thu</div>
+                <div class="calendar-header">Fri</div>
+                <div class="calendar-header">Sat</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="panchanga-overlay" id="panchangaOverlay" onclick="closePanchangaInfo()"></div>
+    <div class="panchanga-info" id="panchangaInfo">
+        <button class="close-btn" onclick="closePanchangaInfo()">×</button>
+        <h3 id="selectedDate"></h3>
+        <div class="info-grid" id="panchangaDetails"></div>
+    </div>
+    
+    <script>
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        
+        function updateCalendar() {
+            document.getElementById('currentMonth').textContent = 
+                `${months[currentMonth]} ${currentYear}`;
+            
+            generateCalendarDays();
+        }
+        
+        function generateCalendarDays() {
+            const grid = document.getElementById('calendarGrid');
+            // Remove existing day cells (keep headers)
+            const existingDays = grid.querySelectorAll('.calendar-day');
+            existingDays.forEach(day => day.remove());
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDate = firstDay.getDay();
+            
+            // Add previous month's trailing days
+            const prevMonth = new Date(currentYear, currentMonth, 0);
+            for (let i = startDate - 1; i >= 0; i--) {
+                const dayNum = prevMonth.getDate() - i;
+                const dayDiv = createDayElement(dayNum, true, 
+                    new Date(currentYear, currentMonth - 1, dayNum));
+                grid.appendChild(dayDiv);
+            }
+            
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = createDayElement(day, false, 
+                    new Date(currentYear, currentMonth, day));
+                grid.appendChild(dayDiv);
+            }
+            
+            // Add next month's leading days
+            const totalCells = grid.children.length - 7; // Exclude headers
+            const remainingCells = 42 - totalCells; // 6 rows × 7 days
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayDiv = createDayElement(day, true, 
+                    new Date(currentYear, currentMonth + 1, day));
+                grid.appendChild(dayDiv);
+            }
+        }
+        
+        function createDayElement(dayNum, isOtherMonth, date) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = `calendar-day ${isOtherMonth ? 'other-month' : ''}`;
+            
+            const isToday = date.toDateString() === new Date().toDateString();
+            if (isToday && !isOtherMonth) {
+                dayDiv.classList.add('selected');
+            }
+            
+            // Sample panchanga data (in real implementation, this would come from API)
+            const sampleTithis = [
+                'Pratipad', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami',
+                'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
+                'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'
+            ];
+            
+            const sampleNakshatras = [
+                'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira',
+                'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha'
+            ];
+            
+            const tithi = sampleTithis[dayNum % sampleTithis.length];
+            const nakshatra = sampleNakshatras[dayNum % sampleNakshatras.length];
+            
+            dayDiv.innerHTML = `
+                <div class="day-number">${dayNum}</div>
+                <div class="day-info">
+                    <div class="tithi-info">${tithi}</div>
+                    <div class="nakshatra-info">${nakshatra}</div>
+                </div>
+            `;
+            
+            dayDiv.onclick = () => showPanchangaInfo(date, tithi, nakshatra);
+            
+            return dayDiv;
+        }
+        
+        function showPanchangaInfo(date, tithi, nakshatra) {
+            const selectedDateEl = document.getElementById('selectedDate');
+            const panchangaDetails = document.getElementById('panchangaDetails');
+            
+            selectedDateEl.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Sample detailed panchanga data
+            const details = [
+                ['Tithi', tithi],
+                ['Nakshatra', nakshatra],
+                ['Yoga', 'Shubha'],
+                ['Karana', 'Bava'],
+                ['Vara', date.toLocaleDateString('en-US', { weekday: 'long' })],
+                ['Sunrise', '06:15 AM'],
+                ['Sunset', '06:30 PM'],
+                ['Moonrise', '08:45 PM'],
+                ['Moonset', '07:30 AM']
+            ];
+            
+            panchangaDetails.innerHTML = '';
+            details.forEach(([label, value]) => {
+                const item = document.createElement('div');
+                item.className = 'info-item';
+                item.innerHTML = `
+                    <span class="info-label">${label}:</span>
+                    <span class="info-value">${value}</span>
+                `;
+                panchangaDetails.appendChild(item);
+            });
+            
+            document.getElementById('panchangaOverlay').style.display = 'block';
+            document.getElementById('panchangaInfo').style.display = 'block';
+        }
+        
+        function closePanchangaInfo() {
+            document.getElementById('panchangaOverlay').style.display = 'none';
+            document.getElementById('panchangaInfo').style.display = 'none';
+        }
+        
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateCalendar();
+        }
+        
+        function goToToday() {
+            const today = new Date();
+            currentMonth = today.getMonth();
+            currentYear = today.getFullYear();
+            updateCalendar();
+        }
+        
+        // Initialize calendar
+        updateCalendar();
+    </script>
+</body>
+</html>
