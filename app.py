@@ -19,7 +19,6 @@ from jhora.horoscope import main as horo_main
 from jhora.horoscope.chart import charts, ashtakavarga, yoga, dosha, strength
 from jhora.horoscope.match import compatibility
 from jhora.horoscope.dhasa.graha import vimsottari
-from jhora.ui.panchangam import PanchangaInfoDialog
 
 app = Flask(__name__)
 app.secret_key = 'jhora_secret_key_2024'
