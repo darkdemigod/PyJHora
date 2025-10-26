@@ -135,7 +135,8 @@ def calculate_horoscope():
         navamsa_positions = charts.navamsa_chart(jd, place)
 
         # Calculate ascendant
-        ascendant = charts.ascendant(jd, place)
+        ascendant_data = drik.ascendant(jd, place)
+        ascendant = (ascendant_data[0], ascendant_data[1])
 
         # Format planetary positions
         planets_info = {}
@@ -157,14 +158,14 @@ def calculate_horoscope():
         # Calculate yogas
         yoga_results = []
         try:
-            yogas = yoga.get_all_yogas(jd, place)
-            for y in yogas[:10]:  # Limit to first 10 yogas
+            yoga_dict, yoga_count, total_yogas = yoga.get_yoga_details_for_all_charts(jd, place, language='en', divisional_chart_factor=1)
+            for yoga_name, yoga_info in list(yoga_dict.items())[:10]:  # Limit to first 10 yogas
                 yoga_results.append({
-                    'name': y[0],
-                    'description': y[1] if len(y) > 1 else ''
+                    'name': yoga_name,
+                    'description': str(yoga_info)
                 })
-        except:
-            pass
+        except Exception as e:
+            print(f"Yoga calculation error: {e}")
 
         result = {
             'planets': planets_info,
@@ -265,7 +266,7 @@ def calculate_dhasa():
 
         # Calculate dhasa periods
         if dhasa_type == 'vimsottari':
-            dhasa_periods = vimsottari.vimsottari_dhasa_bhukthi(jd, place)
+            dhasa_periods = vimsottari.get_vimsottari_dhasa_bhukthi(jd, place)
 
             results = []
             for period in dhasa_periods[:20]:  # Limit to first 20 periods
@@ -290,5 +291,6 @@ if __name__ == '__main__':
     # Create templates directory if it doesn't exist
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
-
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # Disable Flask reloader which can cause port conflicts
+    app.run(host='0.0.0.0', port=5000, debug=False)
