@@ -19,16 +19,12 @@ from jhora.horoscope import main as horo_main
 from jhora.horoscope.chart import charts, ashtakavarga, yoga, dosha, strength
 from jhora.horoscope.match import compatibility
 from jhora.horoscope.dhasa.graha import vimsottari
-from jhora.vedic_v4_predictor import PredictionEngine
 
 app = Flask(__name__)
 app.secret_key = 'jhora_secret_key_2024'
 
 # Initialize language settings
 utils.set_language(const.available_languages['English'])
-
-# Initialize V4 Prediction Engine
-prediction_engine = PredictionEngine()
 
 @app.route('/')
 def index():
@@ -88,41 +84,21 @@ def calculate_panchanga():
         karana_info = drik.karana(jd, place)
         rasi_info = drik.raasi(jd, place)
 
-        # Safely extract time values
-        sunrise_time = sunrise[1] if (isinstance(sunrise, (tuple, list)) and len(sunrise) > 1) else 'N/A'
-        sunset_time = sunset[1] if (isinstance(sunset, (tuple, list)) and len(sunset) > 1) else 'N/A'
-        moonrise_time = moonrise[1] if (isinstance(moonrise, (tuple, list)) and len(moonrise) > 1) else 'N/A'
-        moonset_time = moonset[1] if (isinstance(moonset, (tuple, list)) and len(moonset) > 1) else 'N/A'
-
-        # Safely extract panchanga values
-        tithi_name = utils.TITHI_LIST[int(tithi_info[0])-1] if (isinstance(tithi_info, (tuple, list)) and len(tithi_info) > 0) else 'Unknown'
-        tithi_deity = utils.TITHI_DEITIES[int(tithi_info[0])-1] if (isinstance(tithi_info, (tuple, list)) and len(tithi_info) > 0) else 'Unknown'
-        
-        nakshatra_name = utils.NAKSHATRA_LIST[int(nakshatra_info[0])-1] if (isinstance(nakshatra_info, (tuple, list)) and len(nakshatra_info) > 0) else 'Unknown'
-        nakshatra_pada = int(nakshatra_info[1]) if (isinstance(nakshatra_info, (tuple, list)) and len(nakshatra_info) > 1) else 1
-        
-        yoga_name = utils.YOGAM_LIST[int(yoga_info[0])-1] if (isinstance(yoga_info, (tuple, list)) and len(yoga_info) > 0) else 'Unknown'
-        karana_name = utils.KARANA_LIST[int(karana_info[0])-1] if (isinstance(karana_info, (tuple, list)) and len(karana_info) > 0) else 'Unknown'
-        rasi_name = utils.RAASI_LIST[int(rasi_info[0])-1] if (isinstance(rasi_info, (tuple, list)) and len(rasi_info) > 0) else 'Unknown'
-        
-        vaara_index = int(drik.vaara(jd)) % 7 if drik.vaara(jd) is not None else 0
-        vaara_name = utils.DAYS_LIST[vaara_index]
-
         # Format the response
         result = {
             'place': f"{place_name} ({latitude:.4f}°, {longitude:.4f}°)",
             'date': date_str,
             'time': time_str,
-            'sunrise': str(sunrise_time),
-            'sunset': str(sunset_time),
-            'moonrise': str(moonrise_time),
-            'moonset': str(moonset_time),
-            'tithi': f"{tithi_name} ({tithi_deity})",
-            'nakshatra': f"{nakshatra_name} - Pada {nakshatra_pada}",
-            'yoga': yoga_name,
-            'karana': karana_name,
-            'rasi': rasi_name,
-            'vaara': vaara_name
+            'sunrise': sunrise[1] if len(sunrise) > 1 else 'N/A',
+            'sunset': sunset[1] if len(sunset) > 1 else 'N/A',
+            'moonrise': moonrise[1] if len(moonrise) > 1 else 'N/A',
+            'moonset': moonset[1] if len(moonset) > 1 else 'N/A',
+            'tithi': f"{utils.TITHI_LIST[tithi_info[0]-1]} ({utils.TITHI_DEITIES[tithi_info[0]-1]})",
+            'nakshatra': f"{utils.NAKSHATRA_LIST[nakshatra_info[0]-1]} - Pada {nakshatra_info[1]}",
+            'yoga': utils.YOGAM_LIST[yoga_info[0]-1],
+            'karana': utils.KARANA_LIST[karana_info[0]-1],
+            'rasi': utils.RAASI_LIST[rasi_info[0]-1],
+            'vaara': utils.DAYS_LIST[drik.vaara(jd)]
         }
 
         return jsonify(result)
@@ -143,9 +119,9 @@ def calculate_horoscope():
 
         # Parse date and time
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        time_parts = str(time_str).split(':')
+        time_parts = time_str.split(':')
         hour = int(time_parts[0])
-        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+        minute = int(time_parts[1])
         second = int(time_parts[2]) if len(time_parts) > 2 else 0
 
         year, month, day = date_obj.year, date_obj.month, date_obj.day
@@ -154,37 +130,55 @@ def calculate_horoscope():
         place = drik.Place(place_name, latitude, longitude, timezone)
         jd = utils.julian_day_number((year, month, day), (hour, minute, second))
 
-        # Get ascendant
-        ascendant_data = drik.ascendant(jd, place)
-        asc_house = int(ascendant_data[0]) if (isinstance(ascendant_data, (tuple, list)) and len(ascendant_data) > 0) else 0
-        asc_long = float(ascendant_data[1]) if (isinstance(ascendant_data, (tuple, list)) and len(ascendant_data) > 1) else 0.0
+        # Calculate planetary positions
+        planet_positions = charts.rasi_chart(jd, place)
+        navamsa_positions = charts.navamsa_chart(jd, place)
 
-        # Build basic chart info
-        planets_info = {
-            'Ascendant': {
-                'house': asc_house + 1,
-                'sign': utils.RAASI_LIST[asc_house % 12],
-                'longitude': f"{asc_long:.2f}°"
+        # Calculate ascendant
+        ascendant = charts.ascendant(jd, place)
+
+        # Format planetary positions
+        planets_info = {}
+        for planet, (house, longitude) in planet_positions:
+            planets_info[utils.PLANET_NAMES[planet]] = {
+                'house': house + 1,  # Convert to 1-based indexing
+                'sign': utils.RAASI_LIST[house],
+                'longitude': f"{longitude:.2f}°"
             }
+
+        # Add ascendant info
+        asc_house, asc_long = ascendant
+        planets_info['Ascendant'] = {
+            'house': asc_house + 1,
+            'sign': utils.RAASI_LIST[asc_house],
+            'longitude': f"{asc_long:.2f}°"
         }
 
+        # Calculate yogas
+        yoga_results = []
+        try:
+            yogas = yoga.get_all_yogas(jd, place)
+            for y in yogas[:10]:  # Limit to first 10 yogas
+                yoga_results.append({
+                    'name': y[0],
+                    'description': y[1] if len(y) > 1 else ''
+                })
+        except:
+            pass
+
         result = {
-            'status': 'success',
-            'chart': {
-                'date': date_str,
-                'time': time_str,
-                'location': place_name,
-                'coordinates': f"{latitude:.4f}°, {longitude:.4f}°"
-            },
             'planets': planets_info,
-            'yogas': [],
-            'message': 'Chart calculated successfully'
+            'yogas': yoga_results,
+            'chart_data': {
+                'rasi': planet_positions,
+                'navamsa': navamsa_positions
+            }
         }
 
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 400
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/compatibility', methods=['POST'])
 def calculate_compatibility():
@@ -271,7 +265,7 @@ def calculate_dhasa():
 
         # Calculate dhasa periods
         if dhasa_type == 'vimsottari':
-            dhasa_periods = vimsottari.get_vimsottari_dhasa_bhukthi(jd, place)
+            dhasa_periods = vimsottari.vimsottari_dhasa_bhukthi(jd, place)
 
             results = []
             for period in dhasa_periods[:20]:  # Limit to first 20 periods
@@ -292,35 +286,9 @@ def calculate_dhasa():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-@app.route('/api/predictions', methods=['POST'])
-def get_predictions():
-    """V4.0 Advanced predictions: Dasha, Marriage, Doshas, Yogas"""
-    try:
-        data = request.json
-        birth_date = data.get('birth_date', '2000-01-01T12:00:00')
-        
-        chart_data = {
-            'lagna_sign': int(data.get('lagna_sign', 1)),
-            'moon_sign': int(data.get('moon_sign', 1)),
-            'moon_nakshatra': int(data.get('moon_nakshatra', 1)),
-            'venus_sign': int(data.get('venus_sign', 2)),
-            'mars_sign': int(data.get('mars_sign', 3)),
-            'mars_house': int(data.get('mars_house', 1)),
-            'jupiter_sign': int(data.get('jupiter_sign', 5)),
-            'mercury_sign': int(data.get('mercury_sign', 4)),
-            'saturn_sign': int(data.get('saturn_sign', 7)),
-        }
-        
-        report = prediction_engine.generate_prediction_report(chart_data, birth_date)
-        return jsonify(report)
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
 if __name__ == '__main__':
     # Create templates directory if it doesn't exist
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
-    
-    # Disable Flask reloader which can cause port conflicts
-    app.run(host='0.0.0.0', port=5000, debug=False)
+
+    app.run(host='0.0.0.0', port=5000, debug=True)

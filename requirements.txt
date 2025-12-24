@@ -9,15 +9,3 @@ pandas>=1.3.0,<2.0.0
 Pillow
 python-dateutil
 requests
-flask
-geocoder
-geopy
-numpy
-pandas
-Pillow
-PyQt6
-pyswisseph
-python-dateutil
-pytz
-requests
-timezonefinder
