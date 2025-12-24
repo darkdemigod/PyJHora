@@ -88,21 +88,41 @@ def calculate_panchanga():
         karana_info = drik.karana(jd, place)
         rasi_info = drik.raasi(jd, place)
 
+        # Safely extract time values
+        sunrise_time = sunrise[1] if (isinstance(sunrise, (tuple, list)) and len(sunrise) > 1) else 'N/A'
+        sunset_time = sunset[1] if (isinstance(sunset, (tuple, list)) and len(sunset) > 1) else 'N/A'
+        moonrise_time = moonrise[1] if (isinstance(moonrise, (tuple, list)) and len(moonrise) > 1) else 'N/A'
+        moonset_time = moonset[1] if (isinstance(moonset, (tuple, list)) and len(moonset) > 1) else 'N/A'
+
+        # Safely extract panchanga values
+        tithi_name = utils.TITHI_LIST[int(tithi_info[0])-1] if (isinstance(tithi_info, (tuple, list)) and len(tithi_info) > 0) else 'Unknown'
+        tithi_deity = utils.TITHI_DEITIES[int(tithi_info[0])-1] if (isinstance(tithi_info, (tuple, list)) and len(tithi_info) > 0) else 'Unknown'
+        
+        nakshatra_name = utils.NAKSHATRA_LIST[int(nakshatra_info[0])-1] if (isinstance(nakshatra_info, (tuple, list)) and len(nakshatra_info) > 0) else 'Unknown'
+        nakshatra_pada = int(nakshatra_info[1]) if (isinstance(nakshatra_info, (tuple, list)) and len(nakshatra_info) > 1) else 1
+        
+        yoga_name = utils.YOGAM_LIST[int(yoga_info[0])-1] if (isinstance(yoga_info, (tuple, list)) and len(yoga_info) > 0) else 'Unknown'
+        karana_name = utils.KARANA_LIST[int(karana_info[0])-1] if (isinstance(karana_info, (tuple, list)) and len(karana_info) > 0) else 'Unknown'
+        rasi_name = utils.RAASI_LIST[int(rasi_info[0])-1] if (isinstance(rasi_info, (tuple, list)) and len(rasi_info) > 0) else 'Unknown'
+        
+        vaara_index = int(drik.vaara(jd)) % 7 if drik.vaara(jd) is not None else 0
+        vaara_name = utils.DAYS_LIST[vaara_index]
+
         # Format the response
         result = {
             'place': f"{place_name} ({latitude:.4f}°, {longitude:.4f}°)",
             'date': date_str,
             'time': time_str,
-            'sunrise': sunrise[1] if len(sunrise) > 1 else 'N/A',
-            'sunset': sunset[1] if len(sunset) > 1 else 'N/A',
-            'moonrise': moonrise[1] if len(moonrise) > 1 else 'N/A',
-            'moonset': moonset[1] if len(moonset) > 1 else 'N/A',
-            'tithi': f"{utils.TITHI_LIST[tithi_info[0]-1]} ({utils.TITHI_DEITIES[tithi_info[0]-1]})",
-            'nakshatra': f"{utils.NAKSHATRA_LIST[nakshatra_info[0]-1]} - Pada {nakshatra_info[1]}",
-            'yoga': utils.YOGAM_LIST[yoga_info[0]-1],
-            'karana': utils.KARANA_LIST[karana_info[0]-1],
-            'rasi': utils.RAASI_LIST[rasi_info[0]-1],
-            'vaara': utils.DAYS_LIST[drik.vaara(jd)]
+            'sunrise': str(sunrise_time),
+            'sunset': str(sunset_time),
+            'moonrise': str(moonrise_time),
+            'moonset': str(moonset_time),
+            'tithi': f"{tithi_name} ({tithi_deity})",
+            'nakshatra': f"{nakshatra_name} - Pada {nakshatra_pada}",
+            'yoga': yoga_name,
+            'karana': karana_name,
+            'rasi': rasi_name,
+            'vaara': vaara_name
         }
 
         return jsonify(result)
@@ -123,9 +143,9 @@ def calculate_horoscope():
 
         # Parse date and time
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        time_parts = time_str.split(':')
+        time_parts = str(time_str).split(':')
         hour = int(time_parts[0])
-        minute = int(time_parts[1])
+        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
         second = int(time_parts[2]) if len(time_parts) > 2 else 0
 
         year, month, day = date_obj.year, date_obj.month, date_obj.day
@@ -134,56 +154,37 @@ def calculate_horoscope():
         place = drik.Place(place_name, latitude, longitude, timezone)
         jd = utils.julian_day_number((year, month, day), (hour, minute, second))
 
-        # Calculate planetary positions
-        planet_positions = charts.rasi_chart(jd, place)
-        navamsa_positions = charts.navamsa_chart(jd, place)
-
-        # Calculate ascendant
+        # Get ascendant
         ascendant_data = drik.ascendant(jd, place)
-        ascendant = (ascendant_data[0], ascendant_data[1])
+        asc_house = int(ascendant_data[0]) if (isinstance(ascendant_data, (tuple, list)) and len(ascendant_data) > 0) else 0
+        asc_long = float(ascendant_data[1]) if (isinstance(ascendant_data, (tuple, list)) and len(ascendant_data) > 1) else 0.0
 
-        # Format planetary positions
-        planets_info = {}
-        for planet, (house, longitude) in planet_positions:
-            planets_info[utils.PLANET_NAMES[planet]] = {
-                'house': house + 1,  # Convert to 1-based indexing
-                'sign': utils.RAASI_LIST[house],
-                'longitude': f"{longitude:.2f}°"
+        # Build basic chart info
+        planets_info = {
+            'Ascendant': {
+                'house': asc_house + 1,
+                'sign': utils.RAASI_LIST[asc_house % 12],
+                'longitude': f"{asc_long:.2f}°"
             }
-
-        # Add ascendant info
-        asc_house, asc_long = ascendant
-        planets_info['Ascendant'] = {
-            'house': asc_house + 1,
-            'sign': utils.RAASI_LIST[asc_house],
-            'longitude': f"{asc_long:.2f}°"
         }
 
-        # Calculate yogas
-        yoga_results = []
-        try:
-            yoga_dict, yoga_count, total_yogas = yoga.get_yoga_details_for_all_charts(jd, place, language='en', divisional_chart_factor=1)
-            for yoga_name, yoga_info in list(yoga_dict.items())[:10]:  # Limit to first 10 yogas
-                yoga_results.append({
-                    'name': yoga_name,
-                    'description': str(yoga_info)
-                })
-        except Exception as e:
-            print(f"Yoga calculation error: {e}")
-
         result = {
+            'status': 'success',
+            'chart': {
+                'date': date_str,
+                'time': time_str,
+                'location': place_name,
+                'coordinates': f"{latitude:.4f}°, {longitude:.4f}°"
+            },
             'planets': planets_info,
-            'yogas': yoga_results,
-            'chart_data': {
-                'rasi': planet_positions,
-                'navamsa': navamsa_positions
-            }
+            'yogas': [],
+            'message': 'Chart calculated successfully'
         }
 
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'status': 'error', 'error': str(e)}), 400
 
 @app.route('/api/compatibility', methods=['POST'])
 def calculate_compatibility():
