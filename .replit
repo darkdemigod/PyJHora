@@ -51,12 +51,13 @@ args = "Flask Server"
 name = "Flask Server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "packager.installForLanguage"
-args = "python3"
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start_server.sh"
+waitForPort = 5000
 
 [agent]
 expertMode = true
@@ -64,7 +65,3 @@ expertMode = true
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 34983
-externalPort = 3000

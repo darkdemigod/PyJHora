@@ -19,12 +19,16 @@ from jhora.horoscope import main as horo_main
 from jhora.horoscope.chart import charts, ashtakavarga, yoga, dosha, strength
 from jhora.horoscope.match import compatibility
 from jhora.horoscope.dhasa.graha import vimsottari
+from jhora.vedic_v4_predictor import PredictionEngine
 
 app = Flask(__name__)
 app.secret_key = 'jhora_secret_key_2024'
 
 # Initialize language settings
 utils.set_language(const.available_languages['English'])
+
+# Initialize V4 Prediction Engine
+prediction_engine = PredictionEngine()
 
 @app.route('/')
 def index():
@@ -284,6 +288,31 @@ def calculate_dhasa():
 
         return jsonify({'periods': results, 'dhasa_type': dhasa_type})
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/api/predictions', methods=['POST'])
+def get_predictions():
+    """V4.0 Advanced predictions: Dasha, Marriage, Doshas, Yogas"""
+    try:
+        data = request.json
+        birth_date = data.get('birth_date', '2000-01-01T12:00:00')
+        
+        chart_data = {
+            'lagna_sign': int(data.get('lagna_sign', 1)),
+            'moon_sign': int(data.get('moon_sign', 1)),
+            'moon_nakshatra': int(data.get('moon_nakshatra', 1)),
+            'venus_sign': int(data.get('venus_sign', 2)),
+            'mars_sign': int(data.get('mars_sign', 3)),
+            'mars_house': int(data.get('mars_house', 1)),
+            'jupiter_sign': int(data.get('jupiter_sign', 5)),
+            'mercury_sign': int(data.get('mercury_sign', 4)),
+            'saturn_sign': int(data.get('saturn_sign', 7)),
+        }
+        
+        report = prediction_engine.generate_prediction_report(chart_data, birth_date)
+        return jsonify(report)
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
