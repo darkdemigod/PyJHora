@@ -2,7 +2,7 @@ modules = ["python-3.8", "web"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib"]
+packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib", "unzip"]
 
 [workflows]
 runButton = "Run Web App"
@@ -37,3 +37,10 @@ mode = "parallel"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python app.py"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[agent]
+expertMode = true
