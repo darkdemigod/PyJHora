@@ -31,7 +31,7 @@ Copy all the files from that folder to package installation directory `jhora/dat
 Requirements
 -------------
 
-Python interface to Swiss ephemeris and Qt.
+Theren interface to Swiss ephemeris and Qt.
 
 ```
 	pip install pyswisseph	# OR apt-get install pyswisseph

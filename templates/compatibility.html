@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marriage Compatibility - JHora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .partner-section {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .partner-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .compatibility-score {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .score-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .porutham-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+        
+        .porutham-name {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .porutham-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .score-good {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .score-average {
+            color: #ed8936;
+            font-weight: bold;
+        }
+        
+        .score-poor {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="nav-link">← Back to Home</a>
+            <h1>💕 Marriage Compatibility</h1>
+            <p>Ashtakoota Guna Milan Analysis</p>
+        </div>
+        
+        <div class="card">
+            <form id="compatibilityForm">
+                <div class="form-row">
+                    <div class="partner-section">
+                        <h3>👨 Boy's Details</h3>
+                        <div class="form-group">
+                            <label for="boy_star">Birth Star (Nakshatra):</label>
+                            <select id="boy_star" name="boy_star" required>
+                                <option value="1">Ashwini</option>
+                                <option value="2">Bharani</option>
+                                <option value="3">Krittika</option>
+                                <option value="4">Rohini</option>
+                                <option value="5">Mrigashira</option>
+                                <option value="6">Ardra</option>
+                                <option value="7">Punarvasu</option>
+                                <option value="8">Pushya</option>
+                                <option value="9">Ashlesha</option>
+                                <option value="10">Magha</option>
+                                <option value="11">Purva Phalguni</option>
+                                <option value="12">Uttara Phalguni</option>
+                                <option value="13">Hasta</option>
+                                <option value="14">Chitra</option>
+                                <option value="15">Swati</option>
+                                <option value="16">Vishakha</option>
+                                <option value="17">Anuradha</option>
+                                <option value="18">Jyeshtha</option>
+                                <option value="19">Mula</option>
+                                <option value="20">Purva Ashadha</option>
+                                <option value="21">Uttara Ashadha</option>
+                                <option value="22">Shravana</option>
+                                <option value="23">Dhanishta</option>
+                                <option value="24">Shatabhisha</option>
+                                <option value="25">Purva Bhadrapada</option>
+                                <option value="26">Uttara Bhadrapada</option>
+                                <option value="27">Revati</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="boy_pada">Pada (Quarter):</label>
+                            <select id="boy_pada" name="boy_pada" required>
+                                <option value="1">1st Pada</option>
+                                <option value="2">2nd Pada</option>
+                                <option value="3">3rd Pada</option>
+                                <option value="4">4th Pada</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="partner-section">
+                        <h3>👩 Girl's Details</h3>
+                        <div class="form-group">
+                            <label for="girl_star">Birth Star (Nakshatra):</label>
+                            <select id="girl_star" name="girl_star" required>
+                                <option value="1">Ashwini</option>
+                                <option value="2">Bharani</option>
+                                <option value="3">Krittika</option>
+                                <option value="4">Rohini</option>
+                                <option value="5">Mrigashira</option>
+                                <option value="6">Ardra</option>
+                                <option value="7">Punarvasu</option>
+                                <option value="8">Pushya</option>
+                                <option value="9">Ashlesha</option>
+                                <option value="10">Magha</option>
+                                <option value="11">Purva Phalguni</option>
+                                <option value="12">Uttara Phalguni</option>
+                                <option value="13">Hasta</option>
+                                <option value="14">Chitra</option>
+                                <option value="15" selected>Swati</option>
+                                <option value="16">Vishakha</option>
+                                <option value="17">Anuradha</option>
+                                <option value="18">Jyeshtha</option>
+                                <option value="19">Mula</option>
+                                <option value="20">Purva Ashadha</option>
+                                <option value="21">Uttara Ashadha</option>
+                                <option value="22">Shravana</option>
+                                <option value="23">Dhanishta</option>
+                                <option value="24">Shatabhisha</option>
+                                <option value="25">Purva Bhadrapada</option>
+                                <option value="26">Uttara Bhadrapada</option>
+                                <option value="27">Revati</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="girl_pada">Pada (Quarter):</label>
+                            <select id="girl_pada" name="girl_pada" required>
+                                <option value="1">1st Pada</option>
+                                <option value="2">2nd Pada</option>
+                                <option value="3">3rd Pada</option>
+                                <option value="4">4th Pada</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">Check Compatibility</button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <p>Calculating compatibility...</p>
+            </div>
+            
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="compatibility-score" id="overallScore">
+                <div class="score-value" id="scoreValue">0%</div>
+                <div>Overall Compatibility</div>
+                <div id="scoreText"></div>
+            </div>
+            
+            <div class="card">
+                <h3>Detailed Porutham Analysis</h3>
+                <div id="poruthamsContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('compatibilityForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/compatibility', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    showError(result.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+        });
+        
+        function displayResults(data) {
+            // Update overall score
+            document.getElementById('scoreValue').textContent = data.overall_percentage + '%';
+            document.getElementById('scoreText').textContent = 
+                `${data.total_score} out of ${data.max_total} points`;
+            
+            // Update score background color
+            const scoreDiv = document.getElementById('overallScore');
+            if (data.overall_percentage >= 75) {
+                scoreDiv.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+            } else if (data.overall_percentage >= 50) {
+                scoreDiv.style.background = 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
+            } else {
+                scoreDiv.style.background = 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)';
+            }
+            
+            // Display detailed poruthams
+            const poruthamsContent = document.getElementById('poruthamsContent');
+            poruthamsContent.innerHTML = '';
+            
+            data.results.forEach(item => {
+                const poruthamsDiv = document.createElement('div');
+                poruthamsDiv.className = 'porutham-item';
+                
+                let scoreClass = 'score-good';
+                if (typeof item.percentage === 'number') {
+                    if (item.percentage < 50) scoreClass = 'score-poor';
+                    else if (item.percentage < 75) scoreClass = 'score-average';
+                }
+                
+                poruthamsDiv.innerHTML = `
+                    <span class="porutham-name">${item.name}</span>
+                    <div class="porutham-score">
+                        <span class="${scoreClass}">${item.score}/${item.max_score}</span>
+                        <span class="${scoreClass}">${item.percentage}${typeof item.percentage === 'number' ? '%' : ''}</span>
+                    </div>
+                `;
+                poruthamsContent.appendChild(poruthamsDiv);
+            });
+            
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

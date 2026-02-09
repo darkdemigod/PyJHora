@@ -1,0 +1,39 @@
+modules = ["python-3.8", "web"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib"]
+
+[workflows]
+runButton = "Run Web App"
+
+[[workflows.workflow]]
+name = "Run"
+author = 42662888
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python src/jhora/horoscope/main.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python src/jhora/horoscope/main.py"
+
+[[workflows.workflow]]
+name = "Run Web App"
+author = 42662888
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+
+[[workflows.workflow]]
+name = "Run Desktop App"
+author = 42662888
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"

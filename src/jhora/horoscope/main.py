@@ -29,6 +29,10 @@
 """
 import swisseph as swe
 from datetime import date
+import sys
+import os
+# Add the parent directory to Python path to find jhora module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from jhora import const, utils
 from jhora.panchanga import drik, surya_sidhantha
 from jhora.horoscope.chart import house,charts
@@ -53,7 +57,28 @@ class Horoscope():
         self.Date = date_in
         self.birth_time = birth_time
         self.pravesha_type = pravesha_type
-        self._22nd_drekkana = {}
+        # Initialize julian_day first before using it
+        if (birth_time!=None):
+            birth_time = birth_time.strip().replace('AM','').replace('PM','')
+            btArr = birth_time.split(':')
+            self.julian_day = swe.julday(self.Date.year,self.Date.month,self.Date.day, int(btArr[0])+int(btArr[1])/60)
+            self.birth_time = (int(btArr[0]),int(btArr[1]),0)
+            if (len(btArr)==3):
+                self.julian_day = swe.julday(self.Date.year,self.Date.month,self.Date.day, int(btArr[0])+int(btArr[1])/60+int(btArr[2])/3600)
+                self.birth_time = (int(btArr[0]),int(btArr[1]),int(btArr[2]))                
+        else:
+            self.julian_day = utils.gregorian_to_jd(self.Date)
+        
+        try:
+            from jhora.horoscope.chart.drekkana_fix import get_22nd_drekkana
+            place = drik.Place(self.place_name,self.latitude,self.longitude,self.timezone_offset)
+            # First get rasi chart positions, then convert to drekkana
+            rasi_positions = charts.rasi_chart(self.julian_day, place, ayanamsa_mode)
+            drekkana_positions = charts.drekkana_chart(rasi_positions)
+            self._22nd_drekkana = get_22nd_drekkana(drekkana_positions)
+        except Exception as e:
+            print(f"Error calculating 22nd drekkana: {e}")
+            self._22nd_drekkana = {}
         self._64th_navamsa = {}
         if self.place_name is None:
             if self.latitude is None or self.longitude is None or self.timezone_offset is None:
@@ -77,16 +102,6 @@ class Horoscope():
         self.Place = drik.Place(self.place_name,self.latitude,self.longitude,self.timezone_offset)
         self.julian_utc = utils.gregorian_to_jd(self.Date)
         #self.timezone_offset = drik.get_place_timezone_offset(self.latitude,self.longitude)
-        if (birth_time!=None):
-            birth_time = birth_time.strip().replace('AM','').replace('PM','')
-            btArr = birth_time.split(':')
-            self.julian_day = swe.julday(self.Date.year,self.Date.month,self.Date.day, int(btArr[0])+int(btArr[1])/60)
-            self.birth_time = (int(btArr[0]),int(btArr[1]),0)
-            if (len(btArr)==3):
-                self.julian_day = swe.julday(self.Date.year,self.Date.month,self.Date.day, int(btArr[0])+int(btArr[1])/60+int(btArr[2])/3600)
-                self.birth_time = (int(btArr[0]),int(btArr[1]),int(btArr[2]))                
-        else:
-            self.julian_day = utils.gregorian_to_jd(self.Date)
         # Set Ayanamsa Mode
         if calculation_type not in const.available_horoscope_calculation_methods:
             print('calculation type',calculation_type,' not in list of available calculation methods',const.available_horoscope_calculation_methods,'Default:drik is used')
@@ -1712,11 +1727,39 @@ if __name__ == "__main__":
     horo_info,chart_info,asc_info = a.get_horoscope_information_for_chart(chart_index=chart_index, chart_method=chart_method,
                                             divisional_chart_factor=dcf, base_rasi=base_rasi,
                                             count_from_end_of_sign=count_from_end_of_sign, varnada_method=1)
-    print(a.calendar_info)
-    print('horo_info',horo_info)
-    print('chart_info',chart_info)
-    print('asc_info',asc_info)
-    print('_22nd_drekkana',a._22nd_drekkana)
+    
+    # Import and use formatting functions
+    try:
+        from . import format_utils
+    except ImportError:
+        # Handle case when running as script directly
+        import format_utils
+    
+    # Format and display the results
+    print("=== FORMATTED CALENDAR INFO ===")
+    formatted_calendar = format_utils.format_astrology_data(a.calendar_info)
+    print(formatted_calendar)
+    
+    print("\n=== FORMATTED HOROSCOPE INFO ===") 
+    formatted_horo = format_utils.format_astrology_data(horo_info)
+    print(formatted_horo)
+    
+    print("\n=== FORMATTED CHART INFO ===")
+    formatted_chart = format_utils.format_chart_info(chart_info)
+    print(formatted_chart)
+    
+    print(f"\n=== ASCENDANT INFO ===")
+    print(f"Ascendant House: {asc_info}")
+    
+    print(f"\n=== 22ND DREKKANA ===")
+    print(f"22nd Drekkana: {a._22nd_drekkana}")
+    
+    # Complete formatted output
+    print("\n" + "="*50)
+    print("COMPLETE FORMATTED HOROSCOPE")
+    print("="*50)
+    complete_output = format_utils.format_horoscope_output(horo_info, chart_info, a.calendar_info)
+    print(complete_output)
     exit()
     planet_positions = charts.mixed_chart(jd_at_dob, place, varga_factor_1=varga_factor_1, chart_method_1=chart_method_1,
                                               varga_factor_2=varga_factor_2, chart_method_2=chart_method_2)
