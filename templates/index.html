@@ -1,205 +1,145 @@
+{% extends "base.html" %}
+{% block title %}PyJHora — Dashboard{% endblock %}
+{% block content %}
+<h1>☿ Vedic Astrology OS — Dashboard</h1>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JHora 4.5.0 - Vedic Astrology</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-        
-        .header h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .feature-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-        }
-        
-        .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
-        }
-        
-        .feature-card h3 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        
-        .feature-card p {
-            color: #718096;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-        
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .navigation {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .nav-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-        
-        .footer {
-            text-align: center;
-            color: white;
-            opacity: 0.8;
-            margin-top: 40px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🕉️ JHora 4.5.0</h1>
-            <p>Complete Vedic Astrology Software</p>
-        </div>
-        
-        <div class="navigation">
-            <div class="nav-links">
-                <a href="/panchanga">📅 Panchanga</a>
-                <a href="/horoscope">🎯 Horoscope</a>
-                <a href="/compatibility">💕 Compatibility</a>
-                <a href="/dhasa">⏰ Dhasa</a>
-                <a href="/calendar">📆 Calendar</a>
-            </div>
-        </div>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📅</div>
-                <h3>Daily Panchanga</h3>
-                <p>Calculate Tithi, Nakshatra, Yoga, Karana, and other daily astrological information with precise astronomical calculations.</p>
-                <a href="/panchanga" class="btn">Calculate Panchanga</a>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Horoscope Charts</h3>
-                <p>Generate comprehensive birth charts including Rasi, Navamsa, and divisional charts with planetary positions and yogas.</p>
-                <a href="/horoscope" class="btn">Generate Chart</a>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💕</div>
-                <h3>Compatibility Matching</h3>
-                <p>Analyze marriage compatibility using traditional Ashtakoota system with detailed Porutham calculations.</p>
-                <a href="/compatibility" class="btn">Check Compatibility</a>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">⏰</div>
-                <h3>Dhasa Periods</h3>
-                <p>Calculate Vimsottari and other dhasa systems to understand planetary periods and their influences.</p>
-                <a href="/dhasa" class="btn">Calculate Dhasa</a>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📆</div>
-                <h3>Vedic Calendar</h3>
-                <p>Interactive calendar showing daily panchanga information, festivals, and auspicious timings.</p>
-                <a href="/calendar" class="btn">View Calendar</a>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🔮</div>
-                <h3>Advanced Features</h3>
-                <p>Ashtakavarga, Yogas, Doshas, Transits, and comprehensive astrological analysis tools.</p>
-                <a href="/horoscope" class="btn">Explore More</a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>© 2024 JHora - Open Source Vedic Astrology Software</p>
-            <p>Based on accurate Swiss Ephemeris calculations</p>
-        </div>
-    </div>
-</body>
-</html>
+<div id="statusBar" class="alert alert-info">
+  <span class="spinner"></span> Loading system status…
+</div>
+
+<div class="grid4" id="engineCards" style="margin-bottom:1.2rem"></div>
+
+<!-- Quick Calc -->
+<div class="card" style="background:var(--grad)">
+  <h2>⚡ Quick Chart</h2>
+  <div class="form-grid">
+    <div><label>Date of Birth</label><input type="date" id="q_date" value="1997-10-03"></div>
+    <div><label>Time (HH:MM)</label><input type="time" id="q_time" value="11:40"></div>
+    <div><label>Place</label><input type="text" id="q_place" value="Jaipur,IN"></div>
+    <div><label>Latitude</label><input type="number" id="q_lat" value="26.9124" step="0.0001"></div>
+    <div><label>Longitude</label><input type="number" id="q_lon" value="75.7873" step="0.0001"></div>
+    <div><label>Timezone (hrs)</label><input type="number" id="q_tz" value="5.5" step="0.5"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="quickChart()">
+      <span class="spinner" id="qSpin" style="display:none"></span> Calculate Full Chart
+    </button>
+    <button class="btn btn-gold" onclick="location.href='/horoscope'">Horoscope →</button>
+    <button class="btn btn-cyan" onclick="location.href='/panchanga'">Panchanga →</button>
+    <button class="btn btn-primary btn-sm" style="background:#065f46" onclick="exportChart()">⬇ Export JSON</button>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card" id="chartSummary" style="display:none">
+    <h2>🪐 Planet Positions</h2>
+    <div id="planetTable"></div>
+  </div>
+  <div class="card" id="aiCard" style="display:none">
+    <h2>🧠 AI Interpretation</h2>
+    <div id="aiResult"></div>
+  </div>
+</div>
+
+<!-- Navtiles -->
+<div class="grid4">
+  {% set tiles = [
+    ('/panchanga','📅','Panchanga','Daily almanac — Tithi, Nakshatra, Yoga, Karana'),
+    ('/divisional','📊','Divisional Charts','D1 through D60 — all 16 standard vargas'),
+    ('/dasha','⏳','Dhasa Periods','Vimshottari Maha & Antar Dashas'),
+    ('/compatibility','💑','Compatibility','Ashtakoota marriage matching'),
+    ('/prashna','🔮','KP Prashna','Krishnamurti Paddhati query analysis'),
+    ('/transit','🌍','Live Transits','Current planetary positions'),
+    ('/predictions','⭐','V4 Predictions','AI-powered Vedic prediction engine'),
+    ('/calendar','📆','Calendar','Vedic calendar & muhurtha')
+  ] %}
+  {% for href, icon, title, desc in tiles %}
+  <a href="{{ href }}" class="card" style="cursor:pointer;display:block;text-align:center;padding:1.5rem;transition:transform .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+    <div style="font-size:2rem">{{ icon }}</div>
+    <h3 style="color:var(--accent);margin:.5rem 0 .2rem">{{ title }}</h3>
+    <p style="font-size:.78rem;color:var(--muted)">{{ desc }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const PS={'Sun':'☀','Moon':'🌙','Mars':'♂','Mercury':'☿','Jupiter':'♃','Venus':'♀','Saturn':'♄','Rahu':'☊','Ketu':'☋','Lagna':'↑'};
+
+async function loadStatus(){
+  try{
+    const d=await fetch('/api/status').then(r=>r.json());
+    const sb=document.getElementById('statusBar');
+    sb.className='alert alert-ok';
+    sb.textContent=`✓ System online — ${d.version?.status||'ASTRO_OS'} | `+
+      Object.entries(d.engines||{}).map(([k,v])=>`${k}:${v?'✓':'✗'}`).join(' | ');
+    document.getElementById('engineCards').innerHTML=
+      Object.entries(d.engines||{}).map(([k,v])=>`
+        <div class="card" style="padding:.8rem;text-align:center">
+          <div style="font-size:1.5rem">${v?'✅':'❌'}</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">${k.replace(/_/g,' ')}</div>
+        </div>`).join('');
+  }catch(e){
+    document.getElementById('statusBar').className='alert alert-err';
+    document.getElementById('statusBar').textContent='⚠ Cannot reach server';
+  }
+}
+
+function payload(){
+  return{date:document.getElementById('q_date').value,
+    time:document.getElementById('q_time').value+':00',
+    place:document.getElementById('q_place').value,
+    latitude:+document.getElementById('q_lat').value,
+    longitude:+document.getElementById('q_lon').value,
+    timezone:+document.getElementById('q_tz').value};
+}
+
+async function quickChart(){
+  const sp=document.getElementById('qSpin'); sp.style.display='inline-block';
+  const p=payload();
+  const[chart,interp]=await Promise.all([api('/api/horoscope',p),api('/api/interpret',{chart:p})]);
+  sp.style.display='none';
+  if(chart.error){alert(chart.error);return;}
+
+  document.getElementById('chartSummary').style.display='block';
+  document.getElementById('planetTable').innerHTML=`<table>
+    <tr><th>Planet</th><th>Sign</th><th>House</th><th>Lon°</th></tr>
+    ${(chart.planets||[]).map(p=>`<tr>
+      <td>${PS[p.name]||''} <b>${p.name}</b></td>
+      <td><span class="badge badge-info">${p.sign}</span></td>
+      <td>${p.house}</td>
+      <td>${(p.lon_in_sign||0).toFixed(2)}</td>
+    </tr>`).join('')}
+  </table>`;
+
+  if(!interp.error){
+    document.getElementById('aiCard').style.display='block';
+    document.getElementById('aiResult').innerHTML=`
+      <div class="panch-item" style="margin-bottom:.5rem">
+        <div class="label">Summary</div><div class="value" style="font-size:.9rem">${interp.summary||'N/A'}</div>
+      </div>
+      <div class="panch-item">
+        <div class="label">Focus</div><div class="value" style="font-size:.9rem">${interp.focus||'N/A'}</div>
+      </div>`;
+  }
+}
+
+async function exportChart(){
+  const p=payload();
+  const form=document.createElement('form');
+  form.method='POST'; form.action='/api/export';
+  form.style.display='none';
+  const inp=document.createElement('input');
+  inp.type='hidden'; inp.name='data'; inp.value=JSON.stringify(p);
+  // Use fetch + blob instead
+  const r=await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+  if(!r.ok){alert('Export failed');return;}
+  const blob=await r.blob();
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='chart_export.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+loadStatus();
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}PyJHora — Vedic Astrology OS{% endblock %}</title>
+<style>
+:root{
+  --bg:#0d0d1a;--surface:#16162a;--card:#1e1e35;--border:#2e2e55;
+  --accent:#f0a500;--accent2:#7c3aed;--accent3:#06b6d4;
+  --text:#e2e2f0;--muted:#9090b0;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;
+  --grad:linear-gradient(135deg,#7c3aed22,#f0a50022);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--accent);text-decoration:none}
+
+/* ── NAV ── */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1.2rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;position:sticky;top:0;z-index:999}
+.nav-brand{font-size:1.1rem;font-weight:700;color:var(--accent);margin-right:.6rem;white-space:nowrap}
+.nav-brand span{color:var(--accent3);font-size:.75rem;font-weight:400;margin-left:.3rem}
+nav a{color:var(--muted);padding:.3rem .65rem;border-radius:.4rem;font-size:.82rem;transition:all .2s;white-space:nowrap}
+nav a:hover,nav a.active{background:var(--border);color:var(--text)}
+nav a.active{color:var(--accent)}
+
+/* ── LAYOUT ── */
+.page{flex:1;padding:1.4rem;max-width:1300px;margin:0 auto;width:100%}
+h1{font-size:1.5rem;font-weight:700;color:var(--accent);margin-bottom:1rem}
+h2{font-size:1.1rem;font-weight:600;color:var(--accent3);margin-bottom:.7rem}
+h3{font-size:.95rem;font-weight:600;color:var(--muted);margin-bottom:.5rem}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.2rem;margin-bottom:1rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media(max-width:768px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;margin-bottom:1rem}
+label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:.2rem}
+input,select{width:100%;background:#11112a;border:1px solid var(--border);color:var(--text);padding:.45rem .65rem;border-radius:.4rem;font-size:.85rem;outline:none;transition:border .2s}
+input:focus,select:focus{border-color:var(--accent2)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border:none;border-radius:.5rem;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--accent2);color:#fff}
+.btn-primary:hover{background:#6d28d9}
+.btn-gold{background:var(--accent);color:#000}
+.btn-gold:hover{background:#d97706}
+.btn-cyan{background:var(--accent3);color:#000}
+.btn-cyan:hover{background:#0891b2}
+.btn-sm{padding:.3rem .7rem;font-size:.78rem}
+.btn-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:#11112a;color:var(--muted);padding:.5rem .8rem;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+td{padding:.45rem .8rem;border-bottom:1px solid #1e1e35;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#11112a55}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:1rem;font-size:.72rem;font-weight:600}
+.badge-ok{background:#22c55e22;color:var(--ok)}
+.badge-warn{background:#f59e0b22;color:var(--warn)}
+.badge-err{background:#ef444422;color:var(--err)}
+.badge-info{background:#06b6d422;color:var(--accent3)}
+.badge-purple{background:#7c3aed22;color:var(--accent2)}
+
+/* ── PANCHANGA GRID ── */
+.panch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.7rem}
+.panch-item{background:#11112a;border:1px solid var(--border);border-radius:.5rem;padding:.8rem}
+.panch-item .label{font-size:.72rem;color:var(--muted);margin-bottom:.2rem}
+.panch-item .value{font-size:.95rem;font-weight:600;color:var(--accent)}
+
+/* ── CHART WHEEL ── */
+.chart-wheel{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);border:2px solid var(--border);border-radius:.5rem;aspect-ratio:1;max-width:400px}
+.house-cell{background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.3rem;font-size:.65rem;min-height:80px;position:relative}
+.house-cell .house-num{color:var(--border);font-size:.6rem;position:absolute;top:2px;left:4px}
+.house-cell .planets{color:var(--accent);font-weight:700;text-align:center;line-height:1.3}
+.house-cell.corner{background:#0d0d1a}
+
+/* ── DONUT ── */
+.donut-wrap{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
+.donut{position:relative;width:100px;height:100px}
+.donut svg{transform:rotate(-90deg)}
+.donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:1.5rem}
+.timeline::before{content:'';position:absolute;left:.5rem;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:.6rem}
+.tl-item::before{content:'';position:absolute;left:-1.1rem;top:.4rem;width:.6rem;height:.6rem;background:var(--accent2);border-radius:50%;border:2px solid var(--bg)}
+.tl-item .tl-title{font-weight:600;font-size:.85rem;color:var(--accent)}
+.tl-item .tl-sub{font-size:.78rem;color:var(--muted)}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:1rem;height:1rem;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ALERTS ── */
+.alert{padding:.6rem 1rem;border-radius:.5rem;font-size:.83rem;margin-bottom:.8rem}
+.alert-err{background:#ef444420;border:1px solid var(--err);color:var(--err)}
+.alert-ok{background:#22c55e20;border:1px solid var(--ok);color:var(--ok)}
+.alert-info{background:#06b6d420;border:1px solid var(--accent3);color:var(--accent3)}
+
+/* ── PROGRESS BAR ── */
+.progress{background:#11112a;border-radius:1rem;height:.5rem;overflow:hidden;margin-top:.2rem}
+.progress-fill{height:100%;border-radius:1rem;background:var(--accent2);transition:width .5s}
+
+/* ── FOOTER ── */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:.5rem 1.2rem;font-size:.75rem;color:var(--muted);text-align:center}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav>
+  <span class="nav-brand">☿ PyJHora <span>ASTRO_OS v4</span></span>
+  <a href="/" {% if request.path=='/' %}class="active"{% endif %}>Dashboard</a>
+  <a href="/panchanga" {% if request.path=='/panchanga' %}class="active"{% endif %}>Panchanga</a>
+  <a href="/horoscope" {% if request.path=='/horoscope' %}class="active"{% endif %}>Horoscope</a>
+  <a href="/divisional" {% if request.path=='/divisional' %}class="active"{% endif %}>Divisionals</a>
+  <a href="/dasha" {% if request.path=='/dasha' %}class="active"{% endif %}>Dhasa</a>
+  <a href="/compatibility" {% if request.path=='/compatibility' %}class="active"{% endif %}>Compatibility</a>
+  <a href="/prashna" {% if request.path=='/prashna' %}class="active"{% endif %}>Prashna</a>
+  <a href="/transit" {% if request.path=='/transit' %}class="active"{% endif %}>Transits</a>
+  <a href="/predictions" {% if request.path=='/predictions' %}class="active"{% endif %}>Predictions</a>
+  <a href="/calendar" {% if request.path=='/calendar' %}class="active"{% endif %}>Calendar</a>
+</nav>
+<div class="page">
+{% block content %}{% endblock %}
+</div>
+<footer>PyJHora — Vedic Astrology OS | ASTRO_OS_FULL_MASTER_ULTIMATE Build</footer>
+<script>
+// shared utilities
+async function api(endpoint, payload){
+  const r = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  return r.json();
+}
+function showErr(container, msg){
+  container.innerHTML=`<div class="alert alert-err">⚠ ${msg}</div>`;
+}
+function today(){return new Date().toISOString().slice(0,10)}
+function sign(lon){
+  const names=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  return names[Math.floor(((lon%360)+360)%360/30)];
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

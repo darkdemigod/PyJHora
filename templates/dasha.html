@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Dhasa Periods — PyJHora{% endblock %}
+{% block content %}
+<h1>⏳ Dhasa Periods</h1>
+
+<div class="card">
+  <h2>Birth Details</h2>
+  <div class="form-grid">
+    <div><label>Date of Birth</label><input type="date" id="date" value="1997-10-03"></div>
+    <div><label>Time of Birth</label><input type="time" id="time" value="11:40" step="1"></div>
+    <div><label>Place</label><input type="text" id="place" value="Jaipur,IN"></div>
+    <div><label>Latitude</label><input type="number" id="latitude" value="26.9124" step="0.0001"></div>
+    <div><label>Longitude</label><input type="number" id="longitude" value="75.7873" step="0.0001"></div>
+    <div><label>Timezone (hrs)</label><input type="number" id="timezone" value="5.5" step="0.5"></div>
+    <div>
+      <label>Dhasa System</label>
+      <select id="dhasa_type">
+        <option value="vimsottari">Vimsottari</option>
+      </select>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="calculate()">
+      <span class="spinner" id="spin" style="display:none"></span> Calculate Dhasa
+    </button>
+    <button class="btn btn-gold" onclick="calcFull()">Full Engine (ASTRO_OS)</button>
+  </div>
+  <div id="errBox"></div>
+</div>
+
+<div id="results" style="display:none">
+  <div class="card">
+    <h2 id="dhasaTitle">Vimsottari Dhasa Periods</h2>
+    <div style="overflow-x:auto">
+      <table id="dhasaTable">
+        <thead>
+          <tr><th>Maha Dasha</th><th>Antar</th><th>Start Date</th><th>End Date</th><th>Duration</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="fullResults" style="display:none">
+  <div class="grid2">
+    <div class="card">
+      <h2>🕐 Maha Dashas</h2>
+      <div class="timeline" id="mahaTimeline"></div>
+    </div>
+    <div class="card">
+      <h2>🕑 Antar Dashas (first 9)</h2>
+      <div class="timeline" id="antarTimeline"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const PLANET_COLORS={Ketu:'#ef4444',Venus:'#ec4899',Sun:'#f59e0b',Moon:'#06b6d4',Mars:'#ef4444',Rahu:'#8b5cf6',Jupiter:'#f59e0b',Saturn:'#64748b',Mercury:'#22c55e'};
+
+function getPayload(){
+  return{date:document.getElementById('date').value,
+    time:document.getElementById('time').value+':00',
+    place:document.getElementById('place').value,
+    latitude:+document.getElementById('latitude').value,
+    longitude:+document.getElementById('longitude').value,
+    timezone:+document.getElementById('timezone').value,
+    dhasa_type:document.getElementById('dhasa_type').value};
+}
+
+async function calculate(){
+  const sp=document.getElementById('spin'); sp.style.display='inline-block';
+  document.getElementById('errBox').innerHTML='';
+  const d=await api('/api/dhasa',getPayload());
+  sp.style.display='none';
+  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+
+  document.getElementById('dhasaTitle').textContent=`${d.dhasa_type} Dhasa Periods`;
+  const tb=document.getElementById('tbody');
+  tb.innerHTML=(d.periods||[]).map(p=>`
+    <tr>
+      <td><b style="color:${PLANET_COLORS[p.planet]||'var(--accent)'}">${p.planet}</b></td>
+      <td>${p.sub_planet||'—'}</td>
+      <td>${p.start_date}</td>
+      <td>${p.end_date}</td>
+      <td><span class="badge badge-info">${p.duration_years} yrs</span></td>
+    </tr>`).join('');
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('fullResults').style.display='none';
+}
+
+async function calcFull(){
+  const sp=document.getElementById('spin'); sp.style.display='inline-block';
+  const d=await api('/api/dasha/full',getPayload());
+  sp.style.display='none';
+  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+
+  function jdDate(jd){
+    // approximate: JD 2451545.0 = J2000.0 = 2000-01-01.5
+    const ms=(jd-2440587.5)*86400000;
+    return new Date(ms).toISOString().slice(0,10);
+  }
+
+  document.getElementById('mahaTimeline').innerHTML=(d.maha_dashas||[]).map(m=>`
+    <div class="tl-item">
+      <div class="tl-title" style="color:${PLANET_COLORS[m.lord]||'var(--accent)'}">${m.lord}</div>
+      <div class="tl-sub">${jdDate(m.start)} → ${jdDate(m.end)}</div>
+    </div>`).join('');
+
+  document.getElementById('antarTimeline').innerHTML=(d.antar_dashas||[]).slice(0,9).map(a=>`
+    <div class="tl-item">
+      <div class="tl-title">${a.maha} / ${a.antar}</div>
+      <div class="tl-sub">${a.len?.toFixed(2)||''} days</div>
+    </div>`).join('');
+
+  document.getElementById('fullResults').style.display='block';
+}
+</script>
+{% endblock %}

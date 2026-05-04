@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}V4 Predictions — PyJHora{% endblock %}
+{% block content %}
+<h1>⭐ V4 Vedic Prediction Engine</h1>
+<p style="color:var(--muted);margin-bottom:1rem">AI-powered Vedic astrology predictions — Vimshottari Dasha, Marriage Timing, Yoga analysis</p>
+
+<div class="card">
+  <h2>Birth Details</h2>
+  <div class="form-grid">
+    <div><label>Date of Birth</label><input type="date" id="date" value="1997-10-03"></div>
+    <div><label>Time of Birth</label><input type="time" id="time" value="11:40" step="1"></div>
+    <div><label>Place</label><input type="text" id="place" value="Jaipur,IN"></div>
+    <div><label>Latitude</label><input type="number" id="latitude" value="26.9124" step="0.0001"></div>
+    <div><label>Longitude</label><input type="number" id="longitude" value="75.7873" step="0.0001"></div>
+    <div><label>Timezone (hrs)</label><input type="number" id="timezone" value="5.5" step="0.5"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="calculate()">
+      <span class="spinner" id="spin" style="display:none"></span> Generate Predictions
+    </button>
+  </div>
+  <div id="errBox"></div>
+</div>
+
+<div id="results" style="display:none">
+  <div class="card">
+    <h2>🔭 Prediction Report</h2>
+    <div id="predContent"></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+async function calculate(){
+  const sp=document.getElementById('spin'); sp.style.display='inline-block';
+  document.getElementById('errBox').innerHTML='';
+  const d=await api('/api/predictions',{
+    date:document.getElementById('date').value,
+    time:document.getElementById('time').value+':00',
+    place:document.getElementById('place').value,
+    latitude:+document.getElementById('latitude').value,
+    longitude:+document.getElementById('longitude').value,
+    timezone:+document.getElementById('timezone').value
+  });
+  sp.style.display='none';
+  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+
+  let html='';
+
+  // Dasha lord
+  if(d.dasha_lord){
+    html+=`<div class="panch-item" style="margin-bottom:.8rem">
+      <div class="label">Current Dasha Lord</div>
+      <div class="value" style="font-size:1.3rem">${d.dasha_lord}</div>
+    </div>`;
+  }
+
+  // Prediction array
+  if(Array.isArray(d.predictions)){
+    html+=`<div style="margin-bottom:.8rem">
+      ${d.predictions.map(p=>`<div class="alert alert-info" style="margin-bottom:.4rem">• ${p}</div>`).join('')}
+    </div>`;
+  }
+
+  // Structured predictions object
+  if(d.vimshottari_dasha){
+    html+=`<div class="card" style="margin-bottom:.8rem">
+      <h3>Vimshottari Dasha</h3>
+      <div class="panch-grid">${Object.entries(d.vimshottari_dasha||{}).map(([k,v])=>`
+        <div class="panch-item"><div class="label">${k}</div><div class="value">${typeof v==='object'?JSON.stringify(v):v}</div></div>
+      `).join('')}</div>
+    </div>`;
+  }
+
+  if(d.marriage_timing){
+    html+=`<div class="card" style="margin-bottom:.8rem">
+      <h3>Marriage Timing</h3>
+      <div class="panch-grid">${Object.entries(d.marriage_timing||{}).map(([k,v])=>`
+        <div class="panch-item"><div class="label">${k}</div><div class="value">${typeof v==='object'?JSON.stringify(v):v}</div></div>
+      `).join('')}</div>
+    </div>`;
+  }
+
+  if(d.yogas){
+    const yogaList=Array.isArray(d.yogas)?d.yogas:Object.keys(d.yogas||{});
+    if(yogaList.length){
+      html+=`<div class="card"><h3>Active Yogas</h3>
+        ${yogaList.map(y=>`<div class="badge badge-ok" style="margin:.2rem">${typeof y==='object'?y.name||JSON.stringify(y):y}</div>`).join('')}
+      </div>`;
+    }
+  }
+
+  if(d.mangal_dosha!==undefined){
+    html+=`<div class="panch-item">
+      <div class="label">Mangal Dosha</div>
+      <div class="value"><span class="badge ${d.mangal_dosha?'badge-err':'badge-ok'}">${d.mangal_dosha?'Present':'Absent'}</span></div>
+    </div>`;
+  }
+
+  if(d.note){
+    html+=`<div class="alert alert-info">${d.note}</div>`;
+  }
+
+  if(!html) html='<div class="alert alert-info">No prediction data returned.</div>';
+  document.getElementById('predContent').innerHTML=html;
+  document.getElementById('results').style.display='block';
+}
+</script>
+{% endblock %}
