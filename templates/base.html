@@ -127,6 +127,10 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:.5re
   <a href="/transit" {% if request.path=='/transit' %}class="active"{% endif %}>Transits</a>
   <a href="/predictions" {% if request.path=='/predictions' %}class="active"{% endif %}>Predictions</a>
   <a href="/calendar" {% if request.path=='/calendar' %}class="active"{% endif %}>Calendar</a>
+  <span style="color:var(--border);margin:0 .2rem">|</span>
+  <a href="/interpret" {% if request.path=='/interpret' %}class="active"{% endif %} style="color:var(--accent2)">🔍 Interpret</a>
+  <a href="/pdf-toolkit" {% if request.path=='/pdf-toolkit' %}class="active"{% endif %} style="color:var(--accent2)">📚 PDF Toolkit</a>
+  <a href="/learning" {% if request.path=='/learning' %}class="active"{% endif %} style="color:var(--accent2)">🎓 Learning</a>
 </nav>
 <div class="page">
 {% block content %}{% endblock %}

@@ -1,134 +1,344 @@
 {% extends "base.html" %}
-{% block title %}Horoscope — PyJHora{% endblock %}
+{% block title %}Chart Calculator — Vedic Astrology{% endblock %}
 {% block content %}
-<h1>🎯 Birth Chart Analysis</h1>
+<style>
+.tab-bar{display:flex;gap:.3rem;border-bottom:2px solid var(--border,#2a2a3a);margin-bottom:1.2rem;flex-wrap:wrap}
+.tab-btn{padding:.5rem 1.1rem;border:none;background:transparent;color:var(--muted,#888);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:600;font-size:.9rem;transition:color .2s}
+.tab-btn:hover{color:var(--fg,#e0e0e0)}
+.tab-btn.active{color:var(--accent,#c084fc);border-bottom-color:var(--accent,#c084fc)}
+.tab-panel{display:none}.tab-panel.active{display:block;animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.planet-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.planet-table th{background:var(--card-bg,#1a1a2e);padding:.5rem .7rem;text-align:left;color:var(--accent,#c084fc);font-weight:600;border-bottom:2px solid var(--border,#2a2a3a)}
+.planet-table td{padding:.45rem .7rem;border-bottom:1px solid var(--border,#2a2a3a)}
+.planet-table tr:hover td{background:rgba(192,132,252,.07)}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.75rem;font-weight:700;margin:.1rem}
+.badge-exalt{background:#16421e;color:#4ade80}.badge-debil{background:#421616;color:#f87171}.badge-own{background:#1e2d42;color:#60a5fa}
+.si-chart{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);width:320px;height:320px;border:2px solid var(--border,#2a2a3a);border-radius:6px;overflow:hidden}
+.si-cell{border:1px solid var(--border,#2a2a3a);padding:.3rem;display:flex;flex-direction:column;gap:.1rem;font-size:.7rem}
+.si-cell.center{background:rgba(0,0,0,.25);opacity:.4}
+.si-sign{color:var(--muted,#888);font-size:.6rem;font-weight:700;text-transform:uppercase}
+.si-planet{display:inline-block;background:var(--accent,#c084fc);color:#111;border-radius:3px;padding:.02rem .22rem;margin:.04rem;font-size:.65rem;font-weight:800}
+.si-planet.lagna{background:#f59e0b}
+.yoga-card{border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:1rem;margin-bottom:.8rem;background:var(--card-bg,#1a1a2e)}
+.yoga-card h4{margin:0 0 .35rem;color:var(--accent,#c084fc);font-size:.95rem}
+.yoga-pairs{font-size:.75rem;color:var(--muted,#888);margin-bottom:.35rem}
+.yoga-effect{font-size:.83rem;line-height:1.5;max-height:80px;overflow:hidden;cursor:pointer;transition:max-height .3s}
+.yoga-effect.expanded{max-height:600px}
+.sb-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.sb-table th{padding:.4rem .55rem;text-align:center;color:var(--accent,#c084fc);border-bottom:2px solid var(--border,#2a2a3a);white-space:nowrap}
+.sb-table td{padding:.35rem .5rem;text-align:center;border-bottom:1px solid var(--border,#2a2a3a)}
+.sb-comp{text-align:left!important;color:var(--muted,#888);font-weight:600;white-space:nowrap;font-size:.78rem}
+.sb-total-row td{font-weight:700;border-top:2px solid var(--accent,#c084fc)!important}
+.sb-bar-wrap{height:8px;border-radius:99px;overflow:hidden;background:var(--border,#2a2a3a);margin-top:.15rem}
+.sb-bar{height:100%;border-radius:99px;transition:width .6s}
+.sb-strong .sb-bar{background:#4ade80}.sb-mid .sb-bar{background:#facc15}.sb-weak .sb-bar{background:#f87171}
+.maha-item{border:1px solid var(--border,#2a2a3a);border-radius:6px;margin-bottom:.5rem;overflow:hidden}
+.maha-header{padding:.65rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-weight:700;background:var(--card-bg,#1a1a2e);user-select:none}
+.maha-header:hover{background:rgba(192,132,252,.09)}
+.maha-arrow,.antar-arrow{display:inline-block;transition:transform .2s;font-size:.75rem}
+.maha-header.open .maha-arrow,.antar-header.open .antar-arrow{transform:rotate(90deg)}
+.maha-body{display:none;padding:.5rem .5rem .5rem 1.4rem}
+.antar-item{border:1px solid var(--border,#2a2a3a);border-radius:4px;margin-bottom:.3rem;overflow:hidden}
+.antar-header{padding:.45rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.025)}
+.antar-header:hover{background:rgba(192,132,252,.07)}
+.antar-body{display:none;padding:.35rem .4rem .35rem 1.1rem}
+.prat-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.prat-table td{padding:.18rem .45rem;border-bottom:1px solid var(--border,#2a2a3a)}
+.prat-table td:first-child{font-weight:600;color:var(--accent,#c084fc)}
+.current-period{background:rgba(192,132,252,.16)!important;border-left:3px solid var(--accent,#c084fc)!important}
+.dosha-badge{padding:.3rem .7rem;border-radius:4px;margin:.2rem;display:inline-block;font-size:.8rem}
+.dosha-present{background:#3d1212;color:#f87171}.dosha-absent{background:#12301a;color:#4ade80}
+.chart-row{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;margin-top:.5rem}
+</style>
 
-<div class="card">
-  <h2>Birth Details</h2>
-  <div class="form-grid">
-    <div><label>Date of Birth</label><input type="date" id="date" value="1997-10-03"></div>
-    <div><label>Time of Birth</label><input type="time" id="time" value="11:40" step="1"></div>
-    <div><label>Place</label><input type="text" id="place" value="Jaipur,IN"></div>
-    <div><label>Latitude</label><input type="number" id="latitude" value="26.9124" step="0.0001"></div>
-    <div><label>Longitude</label><input type="number" id="longitude" value="75.7873" step="0.0001"></div>
-    <div><label>Timezone (hrs)</label><input type="number" id="timezone" value="5.5" step="0.5"></div>
-  </div>
-  <div class="btn-row">
-    <button class="btn btn-primary" onclick="calculate()">
-      <span class="spinner" id="spin" style="display:none"></span> Generate Chart
-    </button>
-    <button class="btn btn-gold" onclick="loadFull()">Full ASTRO_OS Chart</button>
-    <button class="btn btn-cyan btn-sm" onclick="location.href='/divisional'">→ Divisionals</button>
-  </div>
-  <div id="errBox"></div>
+<h1>Chart Calculator</h1>
+<p style="color:var(--muted,#888);margin-bottom:1.5rem">Full Vedic natal chart: planets, Raja Yogas, Shad Bala, and 3-level Vimsottari Dasha tree.</p>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <form id="chartForm" onsubmit="calcChart(event)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem">
+      <div class="form-group"><label>Year</label><input class="form-control" type="number" id="year" value="1990" min="1800" max="2100"></div>
+      <div class="form-group"><label>Month</label><input class="form-control" type="number" id="month" value="1" min="1" max="12"></div>
+      <div class="form-group"><label>Day</label><input class="form-control" type="number" id="day" value="1" min="1" max="31"></div>
+      <div class="form-group"><label>Hour (0–23)</label><input class="form-control" type="number" id="hour" value="6" min="0" max="23"></div>
+      <div class="form-group"><label>Minute</label><input class="form-control" type="number" id="minute" value="0" min="0" max="59"></div>
+      <div class="form-group"><label>Latitude</label><input class="form-control" type="number" id="lat" value="13.0827" step="0.0001"></div>
+      <div class="form-group"><label>Longitude</label><input class="form-control" type="number" id="lon" value="80.2707" step="0.0001"></div>
+      <div class="form-group"><label>Timezone offset</label><input class="form-control" type="number" id="tz" value="5.5" step="0.5"></div>
+    </div>
+    <div style="margin-top:.9rem;display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+      <button type="submit" class="btn btn-primary">Calculate Chart</button>
+      <button type="button" class="btn" id="btnInterpret" style="display:none" onclick="openInterpret()">🔍 Deep Interpret</button>
+      <span id="calcStatus" style="color:var(--muted,#888);font-size:.85rem"></span>
+    </div>
+  </form>
 </div>
 
-<div id="results" style="display:none">
-  <div class="grid2">
-    <div class="card">
-      <h2>🪐 Planetary Positions</h2>
-      <div id="planetTable"></div>
-    </div>
-    <div class="card">
-      <h2>✨ Yogas</h2>
-      <div id="yogaList"></div>
-    </div>
+<div id="resultArea" style="display:none">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="planets">🪐 Planets</button>
+    <button class="tab-btn" data-tab="yogas">✨ Yogas</button>
+    <button class="tab-btn" data-tab="strengths">💪 Strengths</button>
+    <button class="tab-btn" data-tab="dashas">⏱ Dashas</button>
   </div>
-  <div class="grid2">
-    <div class="card">
-      <h2>⚡ Doshas</h2>
-      <div id="doshaList"></div>
+
+  <div id="tab-planets" class="tab-panel active">
+    <div class="chart-row">
+      <div style="flex:1;min-width:320px">
+        <h3 style="margin-bottom:.7rem">Planet Positions</h3>
+        <div id="planetTableWrap"></div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.7rem">South Indian Chart</h3>
+        <div id="siChart" class="si-chart"></div>
+        <p style="color:var(--muted,#888);font-size:.7rem;margin-top:.35rem">L = Lagna · abbreviations for planets</p>
+      </div>
     </div>
-    <div class="card">
-      <h2>🧠 AI Interpretation</h2>
-      <div id="aiBox"></div>
-    </div>
+    <div id="doshaSection" style="margin-top:1.2rem"></div>
+  </div>
+
+  <div id="tab-yogas" class="tab-panel">
+    <div id="rajaYogaSection"></div>
+    <div id="yogaSection" style="margin-top:1rem"></div>
+  </div>
+
+  <div id="tab-strengths" class="tab-panel">
+    <div id="shadBalaSection"></div>
+  </div>
+
+  <div id="tab-dashas" class="tab-panel">
+    <div id="dashaSection"><p style="color:var(--muted,#888)">Dasha tree loads on first visit to this tab…</p></div>
   </div>
 </div>
-{% endblock %}
-{% block extra_js %}
+
 <script>
-const PS={'Sun':'☀','Moon':'🌙','Mars':'♂','Mercury':'☿','Jupiter':'♃','Venus':'♀','Saturn':'♄','Rahu':'☊','Ketu':'☋','Lagna':'↑'};
+const SI_POS={11:[0,0],0:[0,1],1:[0,2],2:[0,3],10:[1,0],3:[1,3],9:[2,0],4:[2,3],8:[3,0],7:[3,1],6:[3,2],5:[3,3]};
+const SI_ABB=['Ari','Tau','Gem','Can','Leo','Vir','Lib','Sco','Sag','Cap','Aqu','Pis'];
+const SIGN_F=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const CENTER=[[1,1],[1,2],[2,1],[2,2]];
+const EXALT={Sun:'Aries',Moon:'Taurus',Mars:'Capricorn',Mercury:'Virgo',Jupiter:'Cancer',Venus:'Pisces',Saturn:'Libra',Rahu:'Gemini',Ketu:'Sagittarius'};
+const DEBIL={Sun:'Libra',Moon:'Scorpio',Mars:'Cancer',Mercury:'Pisces',Jupiter:'Capricorn',Venus:'Virgo',Saturn:'Aries',Rahu:'Sagittarius',Ketu:'Gemini'};
+const OWN={Sun:['Leo'],Moon:['Cancer'],Mars:['Aries','Scorpio'],Mercury:['Gemini','Virgo'],Jupiter:['Sagittarius','Pisces'],Venus:['Taurus','Libra'],Saturn:['Capricorn','Aquarius']};
+let _chartId=null,_dashaLoaded=false;
 
-function getPayload(){
-  return{date:document.getElementById('date').value,
-    time:document.getElementById('time').value+':00',
-    place:document.getElementById('place').value,
-    latitude:+document.getElementById('latitude').value,
-    longitude:+document.getElementById('longitude').value,
-    timezone:+document.getElementById('timezone').value};
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+    if(tab==='dashas'&&!_dashaLoaded&&_chartId)loadDashas();
+  });
+});
+
+async function calcChart(e){
+  e.preventDefault();
+  const status=document.getElementById('calcStatus');
+  status.textContent='Calculating…';
+  document.getElementById('resultArea').style.display='none';
+  const payload={
+    year:+document.getElementById('year').value,
+    month:+document.getElementById('month').value,
+    day:+document.getElementById('day').value,
+    hour:+document.getElementById('hour').value,
+    minute:+document.getElementById('minute').value,
+    latitude:+document.getElementById('lat').value,
+    longitude:+document.getElementById('lon').value,
+    timezone:+document.getElementById('tz').value
+  };
+  try{
+    const res=await fetch('/api/horoscope',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.error){status.textContent='❌ '+data.error;return;}
+    _chartId=data.chart_id;_dashaLoaded=false;
+    status.textContent='✓ Chart ready (ID: '+_chartId+')';
+    document.getElementById('resultArea').style.display='block';
+    document.getElementById('btnInterpret').style.display='inline-block';
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelector('[data-tab="planets"]').classList.add('active');
+    document.getElementById('tab-planets').classList.add('active');
+    renderPlanets(data);renderYogas(data);renderStrengths(data);
+  }catch(err){status.textContent='❌ '+err;}
 }
 
-async function calculate(){
-  const sp=document.getElementById('spin'); sp.style.display='inline-block';
-  document.getElementById('errBox').innerHTML='';
-  const d=await api('/api/horoscope',getPayload());
-  sp.style.display='none';
-  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
-  render(d);
+function openInterpret(){window.location.href='/interpret?chart_id='+encodeURIComponent(_chartId);}
+
+function renderPlanets(data){
+  const planets=data.planets||[];
+  let html='<table class="planet-table"><thead><tr><th>Planet</th><th>Sign</th><th>House</th><th>Degree</th><th>Status</th></tr></thead><tbody>';
+  planets.forEach(p=>{
+    const isE=EXALT[p.name]===p.sign,isD=DEBIL[p.name]===p.sign,isO=(OWN[p.name]||[]).includes(p.sign);
+    const badge=isE?'<span class="badge badge-exalt">Exalted</span>':isD?'<span class="badge badge-debil">Debilitated</span>':isO?'<span class="badge badge-own">Own Sign</span>':'';
+    html+=`<tr><td><strong>${p.name}</strong></td><td>${p.sign}</td><td>${p.house}</td><td>${(p.lon_in_sign||0).toFixed(2)}°</td><td>${badge}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('planetTableWrap').innerHTML=html;
+
+  // SI chart
+  const grid=Array.from({length:4},()=>Array.from({length:4},()=>({sign:'',rasi:-1,ps:[]})));
+  for(const[rasi,pos]of Object.entries(SI_POS)){const[r,c]=pos;grid[r][c].sign=SI_ABB[+rasi];grid[r][c].rasi=+rasi;}
+  planets.forEach(p=>{
+    const ri=SIGN_F.indexOf(p.sign);
+    if(ri>=0&&SI_POS[ri]){const[r,c]=SI_POS[ri];grid[r][c].ps.push(p.name);}
+  });
+  let si='';
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+    if(CENTER.some(([cr,cc])=>cr===r&&cc===c)){si+='<div class="si-cell center"></div>';continue;}
+    const cell=grid[r][c];
+    let ps='';cell.ps.forEach(pn=>{ps+=`<span class="si-planet${pn==='Lagna'?' lagna':''}">${pn==='Lagna'?'L':pn.slice(0,2)}</span>`;});
+    si+=`<div class="si-cell"><span class="si-sign">${cell.sign}</span>${ps}</div>`;
+  }
+  document.getElementById('siChart').innerHTML=si;
+
+  // Doshas
+  const doshas=data.doshas||{};
+  if(Object.keys(doshas).length){
+    let dh='<h3 style="margin-bottom:.6rem">Doshas</h3><div>';
+    for(const[k,v]of Object.entries(doshas)){
+      const absent=v.toLowerCase().includes('no ')||v.toLowerCase().includes('not ')||v.toLowerCase().includes('absent');
+      dh+=`<span class="dosha-badge ${absent?'dosha-absent':'dosha-present'}" title="${v}">${k}</span>`;
+    }
+    document.getElementById('doshaSection').innerHTML=dh+'</div>';
+  }
 }
 
-async function loadFull(){
-  const sp=document.getElementById('spin'); sp.style.display='inline-block';
-  document.getElementById('errBox').innerHTML='';
-  const d=await api('/api/chart/full',getPayload());
-  sp.style.display='none';
-  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
-  render(d);
-  if(d.vargas){
-    const keys=Object.keys(d.vargas).slice(0,4);
-    let html='<div class="card"><h2>📊 Sample Vargas (D1–D12)</h2><div class="grid4">';
-    keys.forEach(v=>{
-      html+=`<div><h3>${v}</h3><table>`;
-      Object.entries(d.vargas[v]||{}).slice(0,5).forEach(([p,info])=>{
-        html+=`<tr><td>${PS[p]||''} ${p}</td><td class="badge badge-info">${info.sign}</td></tr>`;
-      });
-      html+=`</table></div>`;
+function renderYogas(data){
+  const rajaYogas=data.raja_yogas||[];
+  let rh='';
+  if(!rajaYogas.length){rh='<p style="color:var(--muted,#888)">No Raja Yogas detected for this birth data.</p>';}
+  else{
+    rh=`<h3 style="margin-bottom:.8rem">👑 Raja Yogas (${rajaYogas.length})</h3>`;
+    rajaYogas.forEach(ry=>{
+      const eff=ry.effect||ry.description||'';
+      rh+=`<div class="yoga-card"><h4>${ry.name||ry.type}</h4>
+        ${ry.pairs?`<div class="yoga-pairs">Planets involved: ${ry.pairs}</div>`:''}
+        ${eff?`<div class="yoga-effect" onclick="this.classList.toggle('expanded')">${eff}<span style="color:var(--accent,#c084fc);font-size:.74rem;margin-left:.3rem">[tap to expand]</span></div>`:''}
+      </div>`;
     });
-    html+='</div></div>';
-    document.getElementById('results').insertAdjacentHTML('beforeend',html);
   }
+  document.getElementById('rajaYogaSection').innerHTML=rh;
+
+  const yogas=data.yogas||{};
+  const yk=Object.keys(yogas);
+  let yh='';
+  if(yk.length){
+    yh=`<h3 style="margin-bottom:.7rem">Other Yogas (${yk.length})</h3><ul style="padding-left:1.2rem;line-height:1.9">`;
+    yk.slice(0,30).forEach(k=>{yh+=`<li><strong>${k}</strong>: ${String(yogas[k]).replace(/<[^>]+>/g,' ').slice(0,220)}</li>`;});
+    if(yk.length>30)yh+=`<li style="color:var(--muted,#888)">…and ${yk.length-30} more</li>`;
+    yh+='</ul>';
+  }else{yh='<p style="color:var(--muted,#888);margin-top:.5rem">No additional yoga data available.</p>';}
+  document.getElementById('yogaSection').innerHTML=yh;
 }
 
-function render(d){
-  document.getElementById('planetTable').innerHTML=`<table>
-    <tr><th>Planet</th><th>Sign</th><th>House</th><th>Lon°</th></tr>
-    ${(d.planets||[]).map(p=>`<tr>
-      <td>${PS[p.name]||''} <b>${p.name}</b></td>
-      <td><span class="badge badge-info">${p.sign}</span></td>
-      <td>${p.house}</td>
-      <td>${(p.lon_in_sign||0).toFixed(2)}</td>
-    </tr>`).join('')}
-  </table>`;
-
-  const yl=document.getElementById('yogaList');
-  if(d.yogas&&d.yogas.length){
-    yl.innerHTML=d.yogas.map(y=>`
-      <div style="border-bottom:1px solid var(--border);padding:.4rem 0">
-        <div style="font-weight:600;color:var(--ok)">${y.name}</div>
-        <div style="font-size:.78rem;color:var(--muted)">${y.description}</div>
-      </div>`).join('');
-  } else {
-    yl.innerHTML='<div class="alert alert-info">No special yogas found.</div>';
+function renderStrengths(data){
+  const sb=data.shad_bala||{};
+  if(!sb.planets||!sb.matrix){
+    document.getElementById('shadBalaSection').innerHTML='<p style="color:var(--muted,#888)">Shad Bala data not available for this chart.</p>';
+    return;
   }
+  const{planets,labels=[],matrix=[],totals={}}=sb;
+  let html='<h3 style="margin-bottom:.8rem">Shad Bala — Sixfold Strength</h3><div style="overflow-x:auto"><table class="sb-table"><thead><tr><th class="sb-comp">Component</th>';
+  planets.forEach(p=>{html+=`<th>${p}</th>`;});
+  html+='</tr></thead><tbody>';
+  matrix.forEach((row,i)=>{
+    const lbl=labels[i]||`Row ${i+1}`;
+    const isTot=lbl.toLowerCase().includes('total')||lbl.toLowerCase().includes('rupa');
+    html+=`<tr${isTot?' class="sb-total-row"':''}><td class="sb-comp">${lbl}</td>`;
+    row.forEach(v=>{html+=`<td>${v}</td>`;});
+    html+='</tr>';
+  });
+  html+='<tr class="sb-total-row"><td class="sb-comp">Total Rupa</td>';
+  planets.forEach(p=>{
+    const v=totals[p]||0;
+    const pct=Math.min(100,(v/300)*100);
+    const cls=v>=150?'sb-strong':v>=80?'sb-mid':'sb-weak';
+    html+=`<td class="${cls}"><div>${v}</div><div class="sb-bar-wrap"><div class="sb-bar" style="width:${pct}%"></div></div></td>`;
+  });
+  html+='</tr></tbody></table></div>';
+  html+=`<div style="margin-top:1rem;display:flex;gap:1rem;flex-wrap:wrap;font-size:.8rem">
+    <span><span class="badge" style="background:#16421e;color:#4ade80">≥150</span> Strong</span>
+    <span><span class="badge" style="background:#2d2a14;color:#facc15">80–149</span> Moderate</span>
+    <span><span class="badge" style="background:#421616;color:#f87171">&lt;80</span> Weak</span>
+  </div>`;
+  document.getElementById('shadBalaSection').innerHTML=html;
+}
 
-  const dl=document.getElementById('doshaList');
-  const doshas=d.doshas||{};
-  dl.innerHTML=Object.keys(doshas).length
-    ? Object.entries(doshas).map(([k,v])=>`
-        <div class="panch-item">
-          <div class="label">${k}</div>
-          <div class="value">${JSON.stringify(v)}</div>
-        </div>`).join('')
-    : '<div class="alert alert-info">No dosha data available.</div>';
+async function loadDashas(){
+  const sec=document.getElementById('dashaSection');
+  sec.innerHTML='<p style="color:var(--muted,#888)">Loading dasha tree…</p>';
+  _dashaLoaded=true;
+  const payload={
+    year:+document.getElementById('year').value,month:+document.getElementById('month').value,
+    day:+document.getElementById('day').value,hour:+document.getElementById('hour').value,
+    minute:+document.getElementById('minute').value,latitude:+document.getElementById('lat').value,
+    longitude:+document.getElementById('lon').value,timezone:+document.getElementById('tz').value,
+    dhasa_type:'vimsottari',tree:true
+  };
+  try{
+    const res=await fetch('/api/dhasa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.error){sec.innerHTML='<p style="color:#f87171">❌ '+data.error+'</p>';_dashaLoaded=false;return;}
+    const tree=data.tree||[];
+    const today=new Date().toISOString().slice(0,10);
+    let html=`<h3 style="margin-bottom:.8rem">Vimsottari Dasha Tree (${tree.length} Maha Periods)</h3><div class="dasha-tree">`;
+    tree.forEach(maha=>{
+      const ms=(maha.start_date||'').slice(0,10);
+      const me=maha.antar&&maha.antar.length?(maha.antar[maha.antar.length-1].end_date||'').slice(0,10):'?';
+      const ma=ms<=today&&today<=me;
+      html+=`<div class="maha-item">
+        <div class="maha-header${ma?' current-period':''}" onclick="toggleEl(this,'maha')">
+          <span class="maha-arrow">▶</span><span>${maha.planet} Maha Dasha</span>
+          <span style="color:var(--muted,#888);font-weight:400;font-size:.8rem;margin-left:.5rem">${ms} → ${me}</span>
+          ${ma?'<span class="badge" style="background:#16421e;color:#4ade80;margin-left:auto">ACTIVE</span>':''}
+        </div>
+        <div class="maha-body">`;
+      (maha.antar||[]).forEach(antar=>{
+        const as=(antar.start_date||'').slice(0,10),ae=(antar.end_date||'').slice(0,10);
+        const aa=as<=today&&today<=ae;
+        html+=`<div class="antar-item">
+          <div class="antar-header${aa?' current-period':''}" onclick="toggleEl(this,'antar')">
+            <span class="antar-arrow">▶</span>
+            <span><strong>${maha.planet}</strong>–${antar.planet}</span>
+            <span style="color:var(--muted,#888);font-size:.77rem;margin-left:.3rem">${as} → ${ae}</span>
+            ${aa?'<span class="badge" style="background:#16421e;color:#4ade80;margin-left:auto">NOW</span>':''}
+          </div>
+          <div class="antar-body" data-prat='${JSON.stringify(antar.pratyantara||[])}' data-rendered="0"></div>
+        </div>`;
+      });
+      html+='</div></div>';
+    });
+    html+='</div>';
+    sec.innerHTML=html;
+    // Auto-open active maha dasha
+    const activeM=sec.querySelector('.maha-header.current-period');
+    if(activeM)setTimeout(()=>{activeM.click();},100);
+  }catch(err){sec.innerHTML='<p style="color:#f87171">❌ '+err+'</p>';_dashaLoaded=false;}
+}
 
-  const ai=d.interpretation||{};
-  document.getElementById('aiBox').innerHTML=ai.summary
-    ? `<div class="panch-item"><div class="label">Summary</div><div class="value">${ai.summary}</div></div>
-       <div class="panch-item"><div class="label">Focus</div><div class="value">${ai.focus}</div></div>`
-    : '<div style="color:var(--muted);font-size:.82rem">AI engine not available.</div>';
-
-  document.getElementById('results').style.display='block';
+function toggleEl(el,type){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  const open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  if(type==='antar'&&!open&&body.dataset.rendered==='0'){
+    body.dataset.rendered='1';
+    const prats=JSON.parse(body.dataset.prat||'[]');
+    if(!prats.length){body.innerHTML='<p style="color:var(--muted,#888);font-size:.77rem;padding:.25rem">No pratyantara data.</p>';return;}
+    const today=new Date().toISOString().slice(0,10);
+    let h='<table class="prat-table"><tbody>';
+    prats.forEach(pr=>{
+      const pa=pr.start_date.slice(0,10)<=today&&today<=pr.end_date.slice(0,10);
+      h+=`<tr${pa?' class="current-period"':''}><td>${pr.planet}</td>
+        <td style="color:var(--muted,#888)">${pr.start_date.slice(0,10)}</td>
+        <td style="color:var(--muted,#888)">→ ${pr.end_date.slice(0,10)}</td>
+        <td>${pa?'<span class="badge" style="background:#16421e;color:#4ade80">NOW</span>':''}</td></tr>`;
+    });
+    h+='</tbody></table>';
+    body.innerHTML=h;
+  }
 }
 </script>
 {% endblock %}

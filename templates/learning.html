@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}Learning Module — Vedic Astrology{% endblock %}
+{% block content %}
+<style>
+.learn-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start}
+@media(max-width:820px){.learn-grid{grid-template-columns:1fr}}
+.rule-row{border-bottom:1px solid var(--border,#2a2a3a);padding:.6rem .3rem;font-size:.83rem}
+.rule-row:last-child{border-bottom:none}
+.rule-score{display:inline-block;min-width:30px;text-align:center;background:var(--accent,#c084fc);color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .28rem;margin-right:.35rem}
+.rule-rel{display:inline-block;min-width:30px;text-align:center;background:#fb923c;color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .28rem;margin-left:.2rem}
+.rule-cat{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(192,132,252,.13);color:var(--accent,#c084fc);font-size:.7rem;margin:.05rem}
+.rule-planet{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(96,165,250,.13);color:#60a5fa;font-size:.7rem;margin:.05rem}
+.book-option{display:flex;align-items:center;gap:.6rem;border:1px solid var(--border,#2a2a3a);border-radius:6px;padding:.6rem .8rem;margin-bottom:.4rem;cursor:pointer;transition:border-color .15s}
+.book-option:hover,.book-option.selected{border-color:var(--accent,#c084fc);background:rgba(192,132,252,.07)}
+.book-option input[type=radio]{accent-color:var(--accent,#c084fc)}
+.pie-wrap{position:relative;margin:0 auto;width:160px;height:160px}
+.pie-legend{margin-top:.8rem;font-size:.8rem}
+.pie-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:.3rem}
+.pattern-card{border:1px solid var(--border,#2a2a3a);border-radius:7px;padding:.85rem 1rem;margin-bottom:.7rem;background:var(--card-bg,#1a1a2e)}
+.pattern-card h4{margin:0 0 .3rem;font-size:.9rem;color:var(--accent,#c084fc)}
+.pattern-card p{font-size:.82rem;line-height:1.55;margin:0}
+.export-btn{display:inline-block;padding:.4rem .9rem;border:1px solid var(--border,#2a2a3a);border-radius:6px;color:var(--fg,#e0e0e0);cursor:pointer;font-size:.82rem;text-decoration:none}
+.export-btn:hover{border-color:var(--accent,#c084fc)}
+</style>
+
+<h1>Learning Module</h1>
+<p style="color:var(--muted,#888);margin-bottom:1.5rem">Deep pattern detection — match a birth chart against classical rules from uploaded books and study the results.</p>
+
+<div class="learn-grid">
+  <!-- Left: book + chart form -->
+  <div>
+    <div class="card">
+      <h3 style="margin-bottom:.8rem">Select a Book</h3>
+      <div id="bookListLearn"><p style="color:var(--muted,#888);font-size:.85rem">No books uploaded. Go to <a href="/pdf-toolkit" style="color:var(--accent,#c084fc)">PDF Toolkit</a> to upload one.</p></div>
+      <button class="btn" style="margin-top:.5rem;font-size:.82rem" onclick="loadBooksLearn()">↺ Refresh</button>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <h3 style="margin-bottom:.8rem">Birth Chart for Matching</h3>
+      <form id="learnForm" onsubmit="runLearn(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+          <div class="form-group"><label>Year</label><input class="form-control" type="number" id="ly" value="1990" min="1800" max="2100"></div>
+          <div class="form-group"><label>Month</label><input class="form-control" type="number" id="lm" value="1" min="1" max="12"></div>
+          <div class="form-group"><label>Day</label><input class="form-control" type="number" id="ld" value="1" min="1" max="31"></div>
+          <div class="form-group"><label>Hour</label><input class="form-control" type="number" id="lhr" value="6" min="0" max="23"></div>
+          <div class="form-group"><label>Latitude</label><input class="form-control" type="number" id="llat" value="13.0827" step="0.0001"></div>
+          <div class="form-group"><label>Longitude</label><input class="form-control" type="number" id="llon" value="80.2707" step="0.0001"></div>
+        </div>
+        <div class="form-group"><label>Timezone</label><input class="form-control" type="number" id="ltz" value="5.5" step="0.5"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.4rem">Find Matching Rules</button>
+        <div id="learnStatus" style="color:var(--muted,#888);font-size:.83rem;margin-top:.5rem;text-align:center"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right: results -->
+  <div>
+    <div id="learnResults" style="display:none">
+      <!-- Pie chart of rule categories -->
+      <div class="card" style="margin-bottom:1rem">
+        <h3 style="margin-bottom:.8rem">Rule Category Distribution</h3>
+        <canvas id="pieCanvas" width="200" height="200" style="display:block;margin:0 auto"></canvas>
+        <div class="pie-legend" id="pieLegend"></div>
+      </div>
+
+      <!-- Pattern cards -->
+      <div class="card" style="margin-bottom:1rem">
+        <h3 style="margin-bottom:.8rem">Deep Pattern Analysis</h3>
+        <div id="patternCards"></div>
+      </div>
+
+      <!-- Matched rules -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.4rem">
+          <h3 style="margin:0">Matched Classical Rules</h3>
+          <div style="display:flex;gap:.4rem">
+            <button class="export-btn" onclick="exportJSON()">⬇ JSON</button>
+            <button class="export-btn" onclick="exportCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <input class="form-control" type="text" id="learnSearch" placeholder="Search matched rules…" oninput="filterLearnRules(this.value)" style="margin-bottom:.7rem">
+        <div id="learnRuleList" style="max-height:500px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div id="learnPlaceholder" style="color:var(--muted,#888);padding:2.5rem 0;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">📖</div>
+      <div>Select a book and enter birth details to begin</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _selectedBookId=null;
+let _allMatchedRules=[];
+let _learnData=null;
+const PIE_COLORS=['#c084fc','#60a5fa','#4ade80','#facc15','#fb923c','#f87171','#34d399'];
+
+async function loadBooksLearn(){
+  try{
+    const res=await fetch('/api/books');
+    const data=await res.json();
+    const books=data.books||[];
+    if(!books.length){
+      document.getElementById('bookListLearn').innerHTML='<p style="color:var(--muted,#888);font-size:.85rem">No books uploaded. Go to <a href="/pdf-toolkit" style="color:var(--accent,#c084fc)">PDF Toolkit</a>.</p>';
+      return;
+    }
+    let h='';
+    books.forEach(b=>{
+      const sel=_selectedBookId===b.book_id?' selected':'';
+      h+=`<label class="book-option${sel}">
+        <input type="radio" name="bookRadio" value="${b.book_id}" ${sel?'checked':''} onchange="selectBook('${b.book_id}')">
+        <div><div style="font-weight:600;font-size:.88rem">${b.filename}</div>
+        <div style="font-size:.75rem;color:var(--muted,#888)">${b.pages} pages · ${b.rules} rules</div></div>
+      </label>`;
+    });
+    document.getElementById('bookListLearn').innerHTML=h;
+    if(books.length&&!_selectedBookId)selectBook(books[0].book_id);
+  }catch(e){}
+}
+
+function selectBook(id){
+  _selectedBookId=id;
+  document.querySelectorAll('.book-option').forEach(el=>{
+    el.classList.toggle('selected',el.querySelector('input').value===id);
+  });
+}
+
+async function runLearn(e){
+  e.preventDefault();
+  if(!_selectedBookId){alert('Please select a book first.');return;}
+  const status=document.getElementById('learnStatus');
+  status.textContent='Matching…';
+  document.getElementById('learnPlaceholder').style.display='none';
+  document.getElementById('learnResults').style.display='none';
+
+  try{
+    const res=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        year:+document.getElementById('ly').value,month:+document.getElementById('lm').value,
+        day:+document.getElementById('ld').value,hour:+document.getElementById('lhr').value,
+        minute:0,latitude:+document.getElementById('llat').value,
+        longitude:+document.getElementById('llon').value,timezone:+document.getElementById('ltz').value,
+        book_id:_selectedBookId
+      })
+    });
+    const data=await res.json();
+    if(data.error){status.textContent='❌ '+data.error;document.getElementById('learnPlaceholder').style.display='block';return;}
+    _learnData=data;
+    _allMatchedRules=data.matched_rules||[];
+    status.textContent=`✓ ${_allMatchedRules.length} rules matched`;
+    renderLearnResults(data);
+  }catch(err){status.textContent='❌ '+err;document.getElementById('learnPlaceholder').style.display='block';}
+}
+
+function renderLearnResults(data){
+  const rules=data.matched_rules||[];
+  const paras=data.paragraphs||[];
+
+  // Pie chart
+  const catCounts={};
+  rules.forEach(r=>{(r.categories||['general']).forEach(c=>{catCounts[c]=(catCounts[c]||0)+1;});});
+  drawPie(catCounts);
+
+  // Pattern cards from interpretation paras
+  const cats=['lagna','dignity','yoga','strength','dosha','classical'];
+  let pc='';
+  cats.forEach(cat=>{
+    const ps=paras.filter(p=>p.category===cat||p.category===cat+'_detail');
+    if(!ps.length)return;
+    ps.slice(0,2).forEach(p=>{
+      pc+=`<div class="pattern-card">
+        <h4><span style="margin-right:.3rem">${p.icon||'•'}</span>${p.title||''}</h4>
+        <p>${p.text||''}</p>
+      </div>`;
+    });
+  });
+  document.getElementById('patternCards').innerHTML=pc||'<p style="color:var(--muted,#888)">No patterns detected.</p>';
+
+  // Rules list
+  renderLearnRules(rules);
+  document.getElementById('learnResults').style.display='block';
+}
+
+function renderLearnRules(rules){
+  if(!rules.length){document.getElementById('learnRuleList').innerHTML='<p style="color:var(--muted,#888)">No rules matched this chart from the selected book.</p>';return;}
+  let h='';
+  rules.forEach(r=>{
+    const cats=(r.categories||[]).map(c=>`<span class="rule-cat">${c}</span>`).join('');
+    const ps=(r.planets||[]).map(p=>`<span class="rule-planet">${p}</span>`).join('');
+    h+=`<div class="rule-row">
+      <div style="margin-bottom:.2rem">
+        <span class="rule-score" title="Relevance score">${r.score}</span>
+        ${cats}${ps}
+        <span class="rule-rel" title="Chart relevance">${r.chart_relevance}</span>
+      </div>
+      <div>${r.text||''}</div>
+    </div>`;
+  });
+  document.getElementById('learnRuleList').innerHTML=h;
+}
+
+function filterLearnRules(q){
+  if(!q){renderLearnRules(_allMatchedRules);return;}
+  const ql=q.toLowerCase();
+  renderLearnRules(_allMatchedRules.filter(r=>(r.text||'').toLowerCase().includes(ql)||(r.planets||[]).some(p=>p.toLowerCase().includes(ql))));
+}
+
+function drawPie(catCounts){
+  const canvas=document.getElementById('pieCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,R=Math.min(W,H)/2-10;
+  ctx.clearRect(0,0,W,H);
+  const entries=Object.entries(catCounts);
+  const total=entries.reduce((s,[,n])=>s+n,0)||1;
+  let angle=-Math.PI/2;
+  let legend='';
+  entries.forEach(([cat,n],i)=>{
+    const slice=(n/total)*Math.PI*2;
+    const color=PIE_COLORS[i%PIE_COLORS.length];
+    ctx.beginPath();ctx.moveTo(W/2,H/2);
+    ctx.arc(W/2,H/2,R,angle,angle+slice);ctx.closePath();
+    ctx.fillStyle=color;ctx.fill();
+    angle+=slice;
+    legend+=`<span style="margin-right:.8rem"><span class="pie-dot" style="background:${color}"></span>${cat} (${n})</span>`;
+  });
+  document.getElementById('pieLegend').innerHTML=legend;
+}
+
+function exportJSON(){
+  if(!_allMatchedRules.length)return;
+  const blob=new Blob([JSON.stringify(_allMatchedRules,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='matched_rules.json';a.click();
+}
+
+function exportCSV(){
+  if(!_allMatchedRules.length)return;
+  const header='score,chart_relevance,categories,planets,text';
+  const rows=_allMatchedRules.map(r=>[
+    r.score,r.chart_relevance,
+    (r.categories||[]).join('|'),
+    (r.planets||[]).join('|'),
+    '"'+(r.text||'').replace(/"/g,"''")+'"'
+  ].join(','));
+  const blob=new Blob([[header,...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='matched_rules.csv';a.click();
+}
+
+loadBooksLearn();
+</script>
+{% endblock %}

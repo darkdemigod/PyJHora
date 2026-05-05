@@ -3,7 +3,10 @@ import sys
 import os
 import io
 import json
-from datetime import datetime, date
+import re
+import uuid
+from datetime import datetime, timedelta, date
+from werkzeug.utils import secure_filename
 
 # ── path setup ─────────────────────────────────────────────────────────────
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,9 +18,15 @@ for d in [current_dir, src_dir]:
 # ── JHora core imports ──────────────────────────────────────────────────────
 from jhora import utils, const
 from jhora.panchanga import drik
-from jhora.horoscope.chart import charts, yoga, dosha, strength
+from jhora.horoscope.chart import charts, yoga, dosha, strength, raja_yoga
 from jhora.horoscope.match import compatibility
 from jhora.horoscope.dhasa.graha import vimsottari
+
+try:
+    import pypdf
+    HAS_PYPDF = True
+except ImportError:
+    HAS_PYPDF = False
 
 utils.set_language(const.available_languages['English'])
 
@@ -105,6 +114,32 @@ except Exception:
 # ── Flask app ───────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = 'jhora_astro_os_secret_2024'
+app.config['UPLOAD_FOLDER'] = os.path.join(current_dir, 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# ── In-memory stores ─────────────────────────────────────────────────────────
+_chart_cache = {}   # chart_id -> full chart data dict
+_book_store   = {}  # book_id  -> {filename, text, chunks, rules}
+
+# ── Constants ────────────────────────────────────────────────────────────────
+DASHA_YEARS_BY_ID  = [6, 10, 7, 17, 16, 20, 19, 18, 7]  # Sun..Ketu
+SHAD_BALA_LABELS   = ['Sthana','Dig','Kala','Chesta','Naisargika','Drik',
+                       'Total Rupa','Required','Ratio']
+SHAD_BALA_PLANETS  = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn']
+ASTRO_KEYWORDS     = {
+    'planets' : ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu','Lagna'],
+    'signs'   : ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra',
+                 'Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'],
+    'yoga'    : ['yoga','dosha','conjunction','aspect','exalted','debilitated',
+                 'retrograde','kendra','trine','dharma','karma','raja','dhana'],
+    'house'   : ['house','bhava','lagna','ascendant','lord','sthana'],
+    'dasha'   : ['dasha','mahadasha','antardasha','bhukti','period','transit'],
+    'predict' : ['gives','causes','results','indicates','shows','produces',
+                 'brings','native','person','born','will'],
+}
+RASI_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+               'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 
 # ── helper utilities ────────────────────────────────────────────────────────
 def safe_float(value, default=0.0):
@@ -121,22 +156,32 @@ def jd_to_date_str(jd):
         return "N/A"
 
 def parse_birth_data(data):
-    date_str   = data.get('date', '')
-    time_str   = data.get('time', '12:00:00')
     place_name = data.get('place', 'Jaipur,IN')
     latitude   = float(data.get('latitude',  26.9124))
     longitude  = float(data.get('longitude', 75.7873))
     timezone   = float(data.get('timezone',  5.5))
 
-    date_obj   = datetime.strptime(date_str, '%Y-%m-%d').date()
-    parts      = time_str.replace('-', ':').split(':')
-    hour       = int(parts[0])
-    minute     = int(parts[1])
-    second     = int(parts[2]) if len(parts) > 2 else 0
+    # Support both individual fields (year/month/day/hour/minute) and date/time strings
+    if 'year' in data:
+        year   = int(data['year'])
+        month  = int(data.get('month',  1))
+        day    = int(data.get('day',    1))
+        hour   = int(data.get('hour',   6))
+        minute = int(data.get('minute', 0))
+        second = int(data.get('second', 0))
+    else:
+        date_str = data.get('date', '')
+        time_str = data.get('time', '6:00:00')
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        year, month, day = date_obj.year, date_obj.month, date_obj.day
+        parts  = time_str.replace('-', ':').split(':')
+        hour   = int(parts[0])
+        minute = int(parts[1]) if len(parts) > 1 else 0
+        second = int(parts[2]) if len(parts) > 2 else 0
 
     place = drik.Place(place_name, latitude, longitude, timezone)
     jd    = utils.julian_day_number(
-                (date_obj.year, date_obj.month, date_obj.day),
+                (year, month, day),
                 (hour, minute, second))
     return place, jd, latitude, longitude, timezone
 
@@ -178,6 +223,157 @@ def get_planet_positions(jd, place):
             "longitude":   round(abs_lon, 4)
         })
     return positions
+
+# ── Dasha helpers ────────────────────────────────────────────────────────────
+def _compute_pratyantara(start_str, end_str):
+    """Compute pratyantara (3rd level) dasha periods proportionally."""
+    try:
+        fmt   = '%Y-%m-%d %H:%M:%S'
+        start = datetime.strptime(start_str[:19], fmt)
+        end   = datetime.strptime(end_str[:19],   fmt)
+        dur   = (end - start).total_seconds()
+        total = sum(DASHA_YEARS_BY_ID)
+        result, cursor = [], start
+        for pid, yrs in enumerate(DASHA_YEARS_BY_ID):
+            p_end = cursor + timedelta(seconds=(yrs / total) * dur)
+            result.append({'planet': PLANET_NAMES[pid],
+                           'start_date': cursor.strftime(fmt),
+                           'end_date':   p_end.strftime(fmt)})
+            cursor = p_end
+        return result
+    except Exception:
+        return []
+
+# ── Rule extraction helpers ───────────────────────────────────────────────────
+def _score_astro_relevance(text):
+    tl, score = text.lower(), 0
+    for kws in ASTRO_KEYWORDS.values():
+        hits = sum(1 for kw in kws if kw.lower() in tl)
+        if hits: score += 1 + min(hits, 4)
+    return score
+
+def _extract_rules(text, min_score=3):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    rules = []
+    for sent in sentences:
+        sent = sent.strip()
+        if not (40 <= len(sent) <= 700): continue
+        score = _score_astro_relevance(sent)
+        if score < min_score: continue
+        sl   = sent.lower()
+        cats = []
+        if any(w in sl for w in ASTRO_KEYWORDS['yoga']):  cats.append('yoga')
+        if any(w in sl for w in ASTRO_KEYWORDS['dasha']): cats.append('dasha')
+        if any(w in sl for w in ASTRO_KEYWORDS['house']): cats.append('house')
+        if not cats: cats.append('general')
+        rules.append({
+            'text':       sent,
+            'score':      score,
+            'categories': cats,
+            'planets':    [p for p in PLANET_NAMES[:9] if p.lower() in sl],
+            'signs':      [s for s in RASI_SIGNS         if s.lower() in sl],
+        })
+    rules.sort(key=lambda r: r['score'], reverse=True)
+    return rules
+
+def _match_rules_to_chart(rules, positions):
+    planet_signs = {p['name']: p['sign'] for p in positions}
+    matched = []
+    for rule in rules:
+        rel = 0
+        for pl in rule.get('planets', []):
+            if pl in planet_signs:
+                rel += 2
+                if planet_signs[pl] in rule.get('signs', []): rel += 4
+        if rel > 0:
+            matched.append({**rule, 'chart_relevance': rel})
+    matched.sort(key=lambda r: r['chart_relevance'], reverse=True)
+    return matched[:25]
+
+def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None):
+    """Generate paragraph-level astrological interpretation."""
+    paras = []
+    EXALT = {'Sun':'Aries','Moon':'Taurus','Mars':'Capricorn','Mercury':'Virgo',
+             'Jupiter':'Cancer','Venus':'Pisces','Saturn':'Libra',
+             'Rahu':'Gemini','Ketu':'Sagittarius'}
+    DEBIL = {'Sun':'Libra','Moon':'Scorpio','Mars':'Cancer','Mercury':'Pisces',
+             'Jupiter':'Capricorn','Venus':'Virgo','Saturn':'Aries',
+             'Rahu':'Sagittarius','Ketu':'Gemini'}
+    SIGN_DESC = {
+        'Aries':'energetic, pioneering, and assertive',
+        'Taurus':'steadfast, sensual, and materially grounded',
+        'Gemini':'communicative, versatile, and intellectually curious',
+        'Cancer':'nurturing, emotionally sensitive, and home-oriented',
+        'Leo':'regal, creative, and leadership-focused',
+        'Virgo':'analytical, service-oriented, and detail-conscious',
+        'Libra':'harmonious, relationship-focused, and justice-seeking',
+        'Scorpio':'intense, transformative, and depth-seeking',
+        'Sagittarius':'philosophical, expansive, and truth-seeking',
+        'Capricorn':'disciplined, achievement-oriented, and structured',
+        'Aquarius':'innovative, humanitarian, and unconventional',
+        'Pisces':'compassionate, mystical, and spiritually attuned',
+    }
+    lagna = next((p for p in positions if p['name'] == 'Lagna'), None)
+    if lagna:
+        desc = SIGN_DESC.get(lagna['sign'], 'qualities of this sign')
+        paras.append({'title': f"{lagna['sign']} Ascendant — Core Personality",
+            'text': (f"The Lagna (Ascendant) is in {lagna['sign']} at {lagna['lon_in_sign']:.2f}°. "
+                     f"This makes the native {desc}. The Lagna lord and its dispositor "
+                     f"colour every facet of the native's life-path and self-expression."),
+            'category': 'lagna', 'icon': '↑'})
+    for p in positions:
+        if p['name'] == 'Lagna': continue
+        if p['sign'] == EXALT.get(p['name']):
+            paras.append({'title': f"{p['name']} Exalted in {p['sign']}",
+                'text': (f"{p['name']} occupies its sign of exaltation ({p['sign']}), conferring exceptional "
+                         f"strength. Its bhava flourishes and during {p['name']}'s dasha the native "
+                         f"can expect peak results in areas governed by this planet."),
+                'category': 'dignity', 'icon': '⬆'})
+        elif p['sign'] == DEBIL.get(p['name']):
+            paras.append({'title': f"{p['name']} Debilitated in {p['sign']}",
+                'text': (f"{p['name']} is in debilitation ({p['sign']}). A Neecha Bhanga may apply. "
+                         f"Remediation through mantra, gemstones, or charity aligned with {p['name']} is advisable."),
+                'category': 'dignity', 'icon': '⬇'})
+    if raja_yogas:
+        paras.append({'title': f"{len(raja_yogas)} Raja Yoga(s) Detected",
+            'text': (f"The chart contains {len(raja_yogas)} Raja Yoga formation(s) arising from dharma-karma "
+                     f"house lord combinations. These bestow status, recognition, and achievement — "
+                     f"most powerfully during the dashas of the participating planets."),
+            'category': 'yoga', 'icon': '👑'})
+        for ry in raja_yogas:
+            txt = ry.get('effect') or ry.get('description', '')
+            if txt:
+                paras.append({'title': ry.get('name', 'Raja Yoga'),
+                    'text': txt[:500] + ('…' if len(txt) > 500 else ''),
+                    'category': 'yoga_detail', 'icon': '☽',
+                    'pairs': ry.get('pairs', '')})
+    if shad_bala and 'totals' in shad_bala:
+        totals = shad_bala['totals']
+        strong = [p for p, v in totals.items() if v >= 150]
+        weak   = [p for p, v in totals.items() if v <  80]
+        if strong:
+            paras.append({'title': 'Planets of Superior Strength',
+                'text': (f"{', '.join(strong)} show superior Shad Bala strength. They deliver results "
+                         f"powerfully during their dasha periods and strengthen any house they occupy or aspect."),
+                'category': 'strength', 'icon': '💪'})
+        if weak:
+            paras.append({'title': 'Planets Requiring Remediation',
+                'text': (f"{', '.join(weak)} carry below-threshold Shad Bala. Gemstone therapy, mantra japa, "
+                         f"and charitable acts aligned with these planets can strengthen their benefic influence."),
+                'category': 'strength', 'icon': '🔻'})
+    active = [k for k, v in doshas.items()
+              if 'no' not in str(v).lower() and 'not' not in str(v).lower()]
+    if active:
+        paras.append({'title': 'Doshas Present',
+            'text': (f"Active doshas: {', '.join(active)}. Each represents a karmic pattern requiring "
+                     f"targeted remedies. A qualified Jyotishi can prescribe personalised remediation."),
+            'category': 'dosha', 'icon': '⚠'})
+    if matched_rules:
+        paras.append({'title': f"{len(matched_rules)} Classical Rules Matched to This Chart",
+            'text': (f"Analysis of uploaded classical texts found {len(matched_rules)} rules directly "
+                     f"applicable to this chart — providing depth beyond standard algorithmic interpretation."),
+            'category': 'classical', 'icon': '📚'})
+    return paras
 
 # ── Page routes ─────────────────────────────────────────────────────────────
 @app.route('/')
@@ -347,19 +543,51 @@ def calculate_horoscope():
         except Exception:
             pass
 
-        # Strength — use shad_bala
-        strength_results = {}
+        # Shad Bala — structured matrix (sb[component][planet])
+        shad_bala_data = {}
         try:
             sb = strength.shad_bala(jd, place)
-            if isinstance(sb, (list, tuple)):
-                for i, val in enumerate(sb[:9]):
-                    p_name = PLANET_NAMES[i] if i < len(PLANET_NAMES) else f"P{i}"
+            if isinstance(sb, (list, tuple)) and len(sb) > 0:
+                n_comp = len(sb)
+                matrix = []
+                for i in range(n_comp):
+                    row = []
+                    comp_row = sb[i] if isinstance(sb[i], (list, tuple)) else []
+                    for j in range(len(SHAD_BALA_PLANETS)):
+                        try:
+                            row.append(round(float(comp_row[j]), 2))
+                        except Exception:
+                            row.append(0.0)
+                    matrix.append(row)
+                totals = {}
+                for j, pname in enumerate(SHAD_BALA_PLANETS):
                     try:
-                        strength_results[p_name] = round(float(val), 3)
+                        total = round(float(sb[6][j]), 2) if n_comp > 6 else round(sum(float(sb[i][j]) for i in range(min(6,n_comp)) if isinstance(sb[i],(list,tuple)) and j < len(sb[i])), 2)
                     except Exception:
-                        strength_results[p_name] = str(val)
-            elif isinstance(sb, dict):
-                strength_results = {str(k): v for k, v in sb.items()}
+                        total = 0.0
+                    totals[pname] = total
+                shad_bala_data = {
+                    'labels':  SHAD_BALA_LABELS[:n_comp],
+                    'planets': SHAD_BALA_PLANETS,
+                    'matrix':  matrix,
+                    'totals':  totals,
+                }
+        except Exception:
+            pass
+
+        # Raja Yogas
+        raja_yogas = []
+        try:
+            rj = raja_yoga.get_raja_yoga_details(jd, place)
+            if isinstance(rj, tuple) and len(rj) >= 1 and isinstance(rj[0], dict):
+                for yname, ydata in rj[0].items():
+                    raja_yogas.append({
+                        'type':        yname,
+                        'pairs':       str(ydata[0]) if len(ydata) > 0 else '',
+                        'name':        str(ydata[1]) if len(ydata) > 1 else yname,
+                        'description': str(ydata[2]) if len(ydata) > 2 else '',
+                        'effect':      str(ydata[3])[:600] if len(ydata) > 3 else '',
+                    })
         except Exception:
             pass
 
@@ -372,12 +600,28 @@ def calculate_horoscope():
             except Exception:
                 pass
 
-        return jsonify({
+        # Cache for /api/interpret/<chart_id>
+        chart_id = str(uuid.uuid4())[:12]
+        _chart_cache[chart_id] = {
+            'birth_data':     data,
             'planets':        positions,
             'yogas':          yoga_results,
+            'raja_yogas':     raja_yogas,
             'doshas':         dosha_results,
-            'strength':       strength_results,
-            'interpretation': interpretation
+            'shad_bala':      shad_bala_data,
+            'interpretation': interpretation,
+        }
+        if len(_chart_cache) > 200:
+            del _chart_cache[next(iter(_chart_cache))]
+
+        return jsonify({
+            'chart_id':       chart_id,
+            'planets':        positions,
+            'yogas':          yoga_results,
+            'raja_yogas':     raja_yogas,
+            'doshas':         dosha_results,
+            'shad_bala':      shad_bala_data,
+            'interpretation': interpretation,
         })
 
     except Exception as e:
@@ -430,31 +674,50 @@ def calculate_dhasa():
         place, jd, lat, lon, tz = parse_birth_data(data)
         dhasa_type = data.get('dhasa_type', 'vimsottari')
 
+        def pid_name(pid):
+            if isinstance(utils.PLANET_NAMES, dict):
+                return utils.PLANET_NAMES.get(pid, PLANET_NAMES[pid] if isinstance(pid, int) and pid < len(PLANET_NAMES) else str(pid))
+            return PLANET_NAMES[pid] if isinstance(pid, int) and pid < len(PLANET_NAMES) else str(pid)
+
         if dhasa_type == 'vimsottari':
-            # get_vimsottari_dhasa_bhukthi returns (start_info, periods_list)
-            # periods_list items: [maha_lord_id, antar_lord_id, start_date_str]
             raw = vimsottari.get_vimsottari_dhasa_bhukthi(jd, place)
             if isinstance(raw, (list, tuple)) and len(raw) == 2 and isinstance(raw[1], list):
                 _start_info, periods_list = raw
             else:
                 periods_list = list(raw) if raw else []
 
+            include_tree = data.get('tree', False)
+            if include_tree:
+                tree = []
+                maha_idx = {}
+                for i, period in enumerate(periods_list):
+                    try:
+                        maha_id  = period[0]
+                        antar_id = period[1]
+                        start_dt = str(period[2]) if len(period) > 2 else "N/A"
+                        end_dt   = str(periods_list[i + 1][2]) if i + 1 < len(periods_list) else "N/A"
+                        antar_entry = {
+                            'planet':       pid_name(antar_id),
+                            'start_date':   start_dt,
+                            'end_date':     end_dt,
+                            'pratyantara':  _compute_pratyantara(start_dt, end_dt),
+                        }
+                        if maha_id not in maha_idx:
+                            maha_idx[maha_id] = len(tree)
+                            tree.append({'planet': pid_name(maha_id), 'start_date': start_dt, 'antar': []})
+                        tree[maha_idx[maha_id]]['antar'].append(antar_entry)
+                    except Exception:
+                        continue
+                return jsonify({'tree': tree, 'dhasa_type': dhasa_type})
+
             results = []
             for i, period in enumerate(periods_list[:60]):
                 try:
-                    maha_id  = period[0]
-                    antar_id = period[1]
-                    start_dt = str(period[2]) if len(period) > 2 else "N/A"
-                    end_dt   = str(periods_list[i + 1][2]) if i + 1 < len(periods_list) else "N/A"
-                    def _pid_name(pid):
-                        if isinstance(utils.PLANET_NAMES, dict):
-                            return utils.PLANET_NAMES.get(pid, PLANET_NAMES[pid] if isinstance(pid,int) and pid<len(PLANET_NAMES) else str(pid))
-                        return PLANET_NAMES[pid] if isinstance(pid,int) and pid<len(PLANET_NAMES) else str(pid)
                     results.append({
-                        'planet':     _pid_name(maha_id),
-                        'sub_planet': _pid_name(antar_id),
-                        'start_date': start_dt,
-                        'end_date':   end_dt,
+                        'planet':     pid_name(period[0]),
+                        'sub_planet': pid_name(period[1]),
+                        'start_date': str(period[2]) if len(period) > 2 else "N/A",
+                        'end_date':   str(periods_list[i + 1][2]) if i + 1 < len(periods_list) else "N/A",
                     })
                 except Exception:
                     continue
@@ -644,19 +907,169 @@ def calculate_transit():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# ── API: AI Interpretation ──────────────────────────────────────────────────
+# ── API: Deep Interpretation (POST) ─────────────────────────────────────────
 @app.route('/api/interpret', methods=['POST'])
 def api_interpret():
     try:
-        data = request.json
-        chart = data.get('chart', {})
+        data    = request.json
+        book_id = data.get('book_id')
+        # If chart_id supplied, re-interpret cached chart
+        cid = data.get('chart_id')
+        if cid and cid in _chart_cache:
+            cached = _chart_cache[cid]
+            matched = _match_rules_to_chart(
+                _book_store.get(book_id, {}).get('rules', []) if book_id else [],
+                cached['planets'])
+            paras = _deep_interpret(cached['planets'], cached.get('raja_yogas',[]),
+                                    cached.get('doshas',{}), cached.get('shad_bala',{}), matched)
+            return jsonify({**cached, 'paragraphs': paras, 'matched_rules': matched})
 
-        if not HAS_AI:
-            return jsonify({'error': 'AI engine not available'}), 503
+        place, jd, lat, lon, tz = parse_birth_data(data)
+        positions = get_planet_positions(jd, place)
 
-        result = _AI_ENGINE.interpret(chart)
+        raja_yogas = []
+        try:
+            rj = raja_yoga.get_raja_yoga_details(jd, place)
+            if isinstance(rj, tuple) and isinstance(rj[0], dict):
+                for yname, ydata in rj[0].items():
+                    raja_yogas.append({'type': yname,
+                        'pairs': str(ydata[0]) if ydata else '',
+                        'name': str(ydata[1]) if len(ydata) > 1 else yname,
+                        'description': str(ydata[2]) if len(ydata) > 2 else '',
+                        'effect': str(ydata[3])[:600] if len(ydata) > 3 else ''})
+        except Exception:
+            pass
+
+        doshas = {}
+        try:
+            raw_d = dosha.get_dosha_details(jd, place)
+            if isinstance(raw_d, dict):
+                for k, v in raw_d.items():
+                    doshas[k] = re.sub(r'<[^>]+>', ' ', str(v)).strip()[:300]
+        except Exception:
+            pass
+
+        shad_bala = {}
+        try:
+            sb = strength.shad_bala(jd, place)
+            if isinstance(sb, (list, tuple)) and len(sb) > 6:
+                totals = {pname: round(float(sb[6][j]), 2)
+                          for j, pname in enumerate(SHAD_BALA_PLANETS)
+                          if isinstance(sb[6], (list, tuple)) and j < len(sb[6])}
+                shad_bala = {'totals': totals, 'planets': SHAD_BALA_PLANETS}
+        except Exception:
+            pass
+
+        matched = _match_rules_to_chart(
+            _book_store.get(book_id, {}).get('rules', []) if book_id else [],
+            positions)
+        paras   = _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched)
+
+        chart_id = str(uuid.uuid4())[:12]
+        result = {'chart_id': chart_id, 'planets': positions, 'raja_yogas': raja_yogas,
+                  'doshas': doshas, 'shad_bala': shad_bala,
+                  'matched_rules': matched, 'paragraphs': paras}
+        _chart_cache[chart_id] = result
         return jsonify(result)
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# ── API: Deep Interpretation by chart_id (GET) ───────────────────────────────
+@app.route('/api/interpret/<chart_id>', methods=['GET'])
+def api_interpret_by_id(chart_id):
+    try:
+        if chart_id not in _chart_cache:
+            return jsonify({'error': 'Chart not found. Recalculate horoscope first.'}), 404
+        book_id = request.args.get('book_id')
+        cached  = _chart_cache[chart_id]
+        matched = _match_rules_to_chart(
+            _book_store.get(book_id, {}).get('rules', []) if book_id else [],
+            cached['planets'])
+        paras = _deep_interpret(cached['planets'], cached.get('raja_yogas', []),
+                                cached.get('doshas', {}), cached.get('shad_bala', {}), matched)
+        return jsonify({**cached, 'paragraphs': paras, 'matched_rules': matched})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# ── API: PDF Upload ───────────────────────────────────────────────────────────
+@app.route('/api/pdf/upload', methods=['POST'])
+def api_pdf_upload():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file field in request'}), 400
+        f = request.files['file']
+        if not f.filename:
+            return jsonify({'error': 'No filename'}), 400
+        if not f.filename.lower().endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are supported'}), 400
+        if not HAS_PYPDF:
+            return jsonify({'error': 'pypdf not installed on server'}), 503
+
+        fname     = secure_filename(f.filename)
+        book_id   = str(uuid.uuid4())[:10]
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{book_id}_{fname}")
+        f.save(save_path)
+
+        reader     = pypdf.PdfReader(save_path)
+        pages_text = []
+        for page in reader.pages:
+            try: pages_text.append(page.extract_text() or '')
+            except Exception: pages_text.append('')
+        full_text = '\n\n'.join(pages_text)
+
+        chunks = [c.strip() for c in re.split(r'\n{2,}', full_text) if len(c.strip()) > 60]
+        rules  = _extract_rules(full_text, min_score=3)
+        _book_store[book_id] = {'filename': fname, 'pages': len(reader.pages),
+                                 'text': full_text, 'chunks': chunks,
+                                 'rules': rules, 'save_path': save_path}
+        return jsonify({'book_id': book_id, 'filename': fname,
+                        'pages': len(reader.pages), 'chars': len(full_text),
+                        'chunks': len(chunks), 'rules': len(rules),
+                        'preview': full_text[:600] + ('…' if len(full_text) > 600 else '')})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# ── API: List Books ───────────────────────────────────────────────────────────
+@app.route('/api/books', methods=['GET'])
+def api_books_list():
+    return jsonify({'books': [
+        {'book_id': bid, 'filename': v['filename'], 'pages': v['pages'],
+         'chunks': len(v['chunks']), 'rules': len(v['rules'])}
+        for bid, v in _book_store.items()
+    ]})
+
+# ── API: Parse Rules from Book ────────────────────────────────────────────────
+@app.route('/api/books/<book_id>/parse-rules', methods=['GET'])
+def api_parse_rules(book_id):
+    try:
+        if book_id not in _book_store:
+            return jsonify({'error': 'Book not found'}), 404
+        book      = _book_store[book_id]
+        min_score = int(request.args.get('min_score', 3))
+        rules     = _extract_rules(book['text'], min_score=min_score)
+        _book_store[book_id]['rules'] = rules
+        grouped   = {}
+        for rule in rules:
+            for cat in rule['categories']:
+                grouped.setdefault(cat, []).append(rule)
+        return jsonify({'book_id': book_id, 'filename': book['filename'],
+                        'total_rules': len(rules),
+                        'by_category': {cat: len(r) for cat, r in grouped.items()},
+                        'top_rules': rules[:50], 'all_rules': rules[:200]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# ── API: Delete Book ──────────────────────────────────────────────────────────
+@app.route('/api/books/<book_id>', methods=['DELETE'])
+def api_delete_book(book_id):
+    try:
+        if book_id not in _book_store:
+            return jsonify({'error': 'Book not found'}), 404
+        book = _book_store.pop(book_id)
+        try: os.remove(book['save_path'])
+        except Exception: pass
+        return jsonify({'deleted': book_id, 'filename': book['filename']})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
@@ -812,6 +1225,19 @@ def api_chart_full():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+# ── New page routes ───────────────────────────────────────────────────────────
+@app.route('/interpret')
+def interpret_page():
+    return render_template('interpret.html')
+
+@app.route('/pdf-toolkit')
+def pdf_toolkit_page():
+    return render_template('pdf_toolkit.html')
+
+@app.route('/learning')
+def learning_page():
+    return render_template('learning.html')
 
 if __name__ == '__main__':
     os.makedirs('templates', exist_ok=True)

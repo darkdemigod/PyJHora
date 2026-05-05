@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}PDF Toolkit — Vedic Astrology{% endblock %}
+{% block content %}
+<style>
+.drop-zone{border:2px dashed var(--border,#2a2a3a);border-radius:10px;padding:2.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--card-bg,#1a1a2e)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent,#c084fc);background:rgba(192,132,252,.07)}
+.drop-icon{font-size:2.5rem;margin-bottom:.6rem}
+.drop-label{color:var(--muted,#888);font-size:.9rem}
+.upload-progress{height:6px;border-radius:99px;background:var(--border,#2a2a3a);margin-top:.8rem;overflow:hidden}
+.upload-bar{height:100%;background:var(--accent,#c084fc);border-radius:99px;width:0;transition:width .4s}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin-bottom:1rem}
+.stat-box{background:var(--card-bg,#1a1a2e);border:1px solid var(--border,#2a2a3a);border-radius:6px;padding:.8rem;text-align:center}
+.stat-val{font-size:1.6rem;font-weight:800;color:var(--accent,#c084fc)}
+.stat-lbl{font-size:.75rem;color:var(--muted,#888);margin-top:.15rem}
+.rule-row{border-bottom:1px solid var(--border,#2a2a3a);padding:.55rem .2rem;font-size:.82rem;display:flex;flex-wrap:wrap;align-items:flex-start;gap:.3rem}
+.rule-row:last-child{border-bottom:none}
+.rule-score{display:inline-block;min-width:28px;text-align:center;background:var(--accent,#c084fc);color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .28rem}
+.rule-cat{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(192,132,252,.13);color:var(--accent,#c084fc);font-size:.7rem}
+.rule-planets{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(96,165,250,.13);color:#60a5fa;font-size:.7rem}
+.cat-bar-wrap{display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem}
+.cat-bar-bg{flex:1;height:10px;border-radius:99px;background:var(--border,#2a2a3a);overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:99px;background:var(--accent,#c084fc)}
+.book-chip{display:flex;align-items:center;gap:.5rem;background:var(--card-bg,#1a1a2e);border:1px solid var(--border,#2a2a3a);border-radius:6px;padding:.5rem .8rem;margin-bottom:.4rem}
+.book-chip-name{flex:1;font-weight:600;font-size:.88rem}
+.book-chip-meta{font-size:.75rem;color:var(--muted,#888)}
+.search-input{width:100%;box-sizing:border-box;margin-bottom:.8rem}
+</style>
+
+<h1>PDF Toolkit</h1>
+<p style="color:var(--muted,#888);margin-bottom:1.5rem">Upload Vedic astrology books (PDF) to extract classical rules. Use extracted rules in the <a href="/interpret" style="color:var(--accent,#c084fc)">Interpreter</a> and <a href="/learning" style="color:var(--accent,#c084fc)">Learning</a> modules.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+  <!-- Upload -->
+  <div>
+    <div class="card">
+      <h3 style="margin-bottom:1rem">Upload PDF Book</h3>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">📚</div>
+        <div class="drop-label">Drag &amp; drop a PDF here, or click to browse</div>
+        <div style="font-size:.75rem;color:var(--muted,#888);margin-top:.3rem">Max 32 MB · PDF only</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="uploadFile(this.files[0])">
+      <div class="upload-progress"><div class="upload-bar" id="uploadBar"></div></div>
+      <div id="uploadStatus" style="font-size:.83rem;color:var(--muted,#888);margin-top:.5rem;text-align:center"></div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <h3 style="margin-bottom:.8rem">Uploaded Books</h3>
+      <div id="bookList"><p style="color:var(--muted,#888);font-size:.85rem">No books uploaded yet.</p></div>
+      <button class="btn" style="margin-top:.5rem;font-size:.82rem" onclick="loadBooks()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Rules viewer -->
+  <div>
+    <div class="card" id="statsSection" style="display:none">
+      <h3 style="margin-bottom:.8rem">Extraction Stats</h3>
+      <div class="stat-grid" id="statGrid"></div>
+      <h4 style="margin-bottom:.5rem">Rules by Category</h4>
+      <div id="catBars"></div>
+      <div style="margin-top:.7rem;display:flex;gap:.6rem;flex-wrap:wrap">
+        <label style="font-size:.83rem;color:var(--muted,#888)">Min score threshold:
+          <input type="range" id="minScore" min="1" max="8" value="3" style="vertical-align:middle;margin-left:.3rem" oninput="document.getElementById('scoreVal').textContent=this.value">
+          <span id="scoreVal">3</span>
+        </label>
+        <button class="btn" onclick="parseRules()" style="font-size:.82rem">Re-parse Rules</button>
+      </div>
+    </div>
+
+    <div class="card" id="rulesSection" style="display:none;margin-top:1rem">
+      <h3 style="margin-bottom:.8rem">Extracted Rules</h3>
+      <input class="form-control search-input" type="text" id="ruleSearch" placeholder="Search rules…" oninput="filterRules(this.value)">
+      <div id="ruleList" style="max-height:480px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _currentBookId=null;
+let _allRules=[];
+
+// Drag and drop
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)uploadFile(f);});
+
+async function uploadFile(file){
+  if(!file||!file.name.endsWith('.pdf')){setStatus('❌ Please select a PDF file.','#f87171');return;}
+  if(file.size>32*1024*1024){setStatus('❌ File too large (max 32 MB).','#f87171');return;}
+  setStatus('Uploading…','var(--muted,#888)');
+  document.getElementById('uploadBar').style.width='30%';
+  const fd=new FormData();fd.append('file',file);
+  try{
+    const res=await fetch('/api/pdf/upload',{method:'POST',body:fd});
+    document.getElementById('uploadBar').style.width='80%';
+    const data=await res.json();
+    if(data.error){setStatus('❌ '+data.error,'#f87171');document.getElementById('uploadBar').style.width='0';return;}
+    document.getElementById('uploadBar').style.width='100%';
+    setStatus(`✓ Uploaded: ${data.filename} — ${data.pages} pages, ${data.chunks} chunks, ${data.rules} rules extracted`,'#4ade80');
+    _currentBookId=data.book_id;
+    showStats({book_id:data.book_id,filename:data.filename,pages:data.pages,chars:data.chars,chunks:data.chunks,total_rules:data.rules});
+    loadBooks();
+    parseRules();
+    setTimeout(()=>document.getElementById('uploadBar').style.width='0',1200);
+  }catch(err){setStatus('❌ '+err,'#f87171');document.getElementById('uploadBar').style.width='0';}
+}
+
+function setStatus(msg,color){
+  const el=document.getElementById('uploadStatus');
+  el.textContent=msg;el.style.color=color;
+}
+
+function showStats(data){
+  document.getElementById('statsSection').style.display='block';
+  document.getElementById('statGrid').innerHTML=
+    stat(data.pages||'?','Pages')+
+    stat(data.chunks||'?','Chunks')+
+    stat(data.total_rules||'?','Rules')+
+    stat(data.chars?Math.round(data.chars/1000)+'k':'?','Characters');
+}
+
+function stat(v,l){return`<div class="stat-box"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`;}
+
+async function parseRules(){
+  if(!_currentBookId)return;
+  const min=document.getElementById('minScore').value;
+  try{
+    const res=await fetch(`/api/books/${_currentBookId}/parse-rules?min_score=${min}`);
+    const data=await res.json();
+    if(data.error){return;}
+    _allRules=data.all_rules||[];
+    showStats({...data,chunks:_allRules.length});
+    // Category bars
+    const by=data.by_category||{};
+    const max=Math.max(1,...Object.values(by));
+    let bh='';
+    for(const[cat,n]of Object.entries(by)){
+      bh+=`<div class="cat-bar-wrap">
+        <span style="min-width:70px;font-size:.78rem;color:var(--muted,#888)">${cat}</span>
+        <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${(n/max)*100}%"></div></div>
+        <span style="font-size:.78rem;font-weight:700;min-width:30px;text-align:right">${n}</span>
+      </div>`;
+    }
+    document.getElementById('catBars').innerHTML=bh;
+    document.getElementById('rulesSection').style.display='block';
+    renderRules(_allRules);
+  }catch(e){}
+}
+
+function renderRules(rules){
+  let h='';
+  rules.slice(0,150).forEach(r=>{
+    const cats=(r.categories||[]).map(c=>`<span class="rule-cat">${c}</span>`).join('');
+    const ps=(r.planets||[]).map(p=>`<span class="rule-planets">${p}</span>`).join('');
+    h+=`<div class="rule-row">
+      <span class="rule-score">${r.score}</span>${cats}${ps}
+      <span style="flex:1">${r.text||''}</span>
+    </div>`;
+  });
+  if(rules.length>150)h+=`<p style="color:var(--muted,#888);font-size:.8rem;padding:.4rem">…and ${rules.length-150} more rules (use search to narrow down)</p>`;
+  document.getElementById('ruleList').innerHTML=h||'<p style="color:var(--muted,#888);font-size:.85rem">No rules extracted at this score threshold.</p>';
+}
+
+function filterRules(q){
+  if(!q){renderRules(_allRules);return;}
+  const ql=q.toLowerCase();
+  renderRules(_allRules.filter(r=>(r.text||'').toLowerCase().includes(ql)||(r.planets||[]).some(p=>p.toLowerCase().includes(ql))||(r.categories||[]).some(c=>c.includes(ql))));
+}
+
+async function loadBooks(){
+  try{
+    const res=await fetch('/api/books');
+    const data=await res.json();
+    const books=data.books||[];
+    if(!books.length){document.getElementById('bookList').innerHTML='<p style="color:var(--muted,#888);font-size:.85rem">No books uploaded yet.</p>';return;}
+    let h='';
+    books.forEach(b=>{
+      h+=`<div class="book-chip">
+        <div>
+          <div class="book-chip-name">${b.filename}</div>
+          <div class="book-chip-meta">${b.pages} pages · ${b.chunks} chunks · ${b.rules} rules</div>
+        </div>
+        <button class="btn" style="font-size:.75rem;padding:.25rem .6rem" onclick="selectBook('${b.book_id}','${b.filename}')">View</button>
+        <button class="btn" style="font-size:.75rem;padding:.25rem .6rem;color:#f87171" onclick="deleteBook('${b.book_id}')">✕</button>
+      </div>`;
+    });
+    document.getElementById('bookList').innerHTML=h;
+  }catch(e){}
+}
+
+function selectBook(id,name){
+  _currentBookId=id;
+  document.getElementById('statsSection').style.display='block';
+  parseRules();
+}
+
+async function deleteBook(id){
+  if(!confirm('Delete this book?'))return;
+  try{
+    await fetch('/api/books/'+id,{method:'DELETE'});
+    if(_currentBookId===id){_currentBookId=null;document.getElementById('statsSection').style.display='none';document.getElementById('rulesSection').style.display='none';}
+    loadBooks();
+  }catch(e){}
+}
+
+loadBooks();
+</script>
+{% endblock %}
