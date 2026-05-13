@@ -182,19 +182,44 @@ function renderLearnResults(data){
   document.getElementById('learnResults').style.display='block';
 }
 
+function fmtFormulaBadge(f){
+  const t=f.type||'';
+  let lbl='';
+  if(t==='planet_in_sign')       lbl=`${f.planet} ∈ ${f.sign}`;
+  else if(t==='planet_in_house') lbl=`${f.planet} → H${f.house}`;
+  else if(t==='lord_transfer')   lbl=`L${f.from_house}→H${f.to_house}`;
+  else if(t==='conjunction')     lbl=`${f.planet1}⊕${f.planet2}`;
+  else if(t==='aspect')          lbl=`${f.aspector}↗${f.aspected}`;
+  else if(t==='exaltation')      lbl=`${f.planet}↑UCH`;
+  else if(t==='debilitation')    lbl=`${f.planet}↓NEE`;
+  else if(t==='yoga_name')       lbl=f.name||'Yoga';
+  else lbl=t;
+  const verified=f._verified;
+  const style=verified
+    ?'background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.4)'
+    :'background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.25)';
+  return `<span style="display:inline-block;padding:.04rem .3rem;border-radius:3px;font-size:.67rem;font-family:monospace;${style};margin:.04rem" title="${t}">${lbl}</span>`;
+}
+
 function renderLearnRules(rules){
   if(!rules.length){document.getElementById('learnRuleList').innerHTML='<p style="color:var(--muted,#888)">No rules matched this chart from the selected book.</p>';return;}
   let h='';
   rules.forEach(r=>{
     const cats=(r.categories||[]).map(c=>`<span class="rule-cat">${c}</span>`).join('');
     const ps=(r.planets||[]).map(p=>`<span class="rule-planet">${p}</span>`).join('');
+    const fhits=r.formula_hits||0;
+    const fcnt=r.formula_count||0;
+    const fVerify=fcnt>0?`<span style="font-size:.7rem;color:${fhits>0?'#4ade80':'#94a3b8'};margin-left:.3rem">✓${fhits}/${fcnt} formula${fcnt>1?'s':''}</span>`:'';
+    const fmls=(r.formulas||[]).map(fmtFormulaBadge).join('');
     h+=`<div class="rule-row">
-      <div style="margin-bottom:.2rem">
-        <span class="rule-score" title="Relevance score">${r.score}</span>
+      <div style="margin-bottom:.25rem">
+        <span class="rule-score" title="Keyword score">${r.score}</span>
         ${cats}${ps}
-        <span class="rule-rel" title="Chart relevance">${r.chart_relevance}</span>
+        <span class="rule-rel" title="Chart relevance: formula×5 + keyword">${r.chart_relevance}</span>
+        ${fVerify}
       </div>
-      <div>${r.text||''}</div>
+      <div style="line-height:1.5">${r.text||''}</div>
+      ${fmls?`<div style="margin-top:.25rem;display:flex;flex-wrap:wrap;gap:.1rem">${fmls}</div>`:''}
     </div>`;
   });
   document.getElementById('learnRuleList').innerHTML=h;

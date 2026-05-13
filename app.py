@@ -123,23 +123,144 @@ _chart_cache = {}   # chart_id -> full chart data dict
 _book_store   = {}  # book_id  -> {filename, text, chunks, rules}
 
 # ── Constants ────────────────────────────────────────────────────────────────
-DASHA_YEARS_BY_ID  = [6, 10, 7, 17, 16, 20, 19, 18, 7]  # Sun..Ketu
+DASHA_YEARS_BY_ID  = [6, 10, 7, 17, 16, 20, 19, 18, 7]  # Sun..Ketu  (120 yr)
 SHAD_BALA_LABELS   = ['Sthana','Dig','Kala','Chesta','Naisargika','Drik',
                        'Total Rupa','Required','Ratio']
 SHAD_BALA_PLANETS  = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn']
-ASTRO_KEYWORDS     = {
-    'planets' : ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu','Lagna'],
-    'signs'   : ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra',
-                 'Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'],
-    'yoga'    : ['yoga','dosha','conjunction','aspect','exalted','debilitated',
-                 'retrograde','kendra','trine','dharma','karma','raja','dhana'],
-    'house'   : ['house','bhava','lagna','ascendant','lord','sthana'],
-    'dasha'   : ['dasha','mahadasha','antardasha','bhukti','period','transit'],
-    'predict' : ['gives','causes','results','indicates','shows','produces',
-                 'brings','native','person','born','will'],
-}
+
 RASI_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
                'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
+
+# Sign lords (traditional Vedic)
+SIGN_LORDS = {
+    'Aries':'Mars','Taurus':'Venus','Gemini':'Mercury','Cancer':'Moon',
+    'Leo':'Sun','Virgo':'Mercury','Libra':'Venus','Scorpio':'Mars',
+    'Sagittarius':'Jupiter','Capricorn':'Saturn','Aquarius':'Saturn','Pisces':'Jupiter',
+}
+
+# Planetary dignities
+EXALTATION_SIGN = {
+    'Sun':'Aries','Moon':'Taurus','Mars':'Capricorn','Mercury':'Virgo',
+    'Jupiter':'Cancer','Venus':'Pisces','Saturn':'Libra',
+    'Rahu':'Gemini','Ketu':'Sagittarius',
+}
+DEBILITATION_SIGN = {
+    'Sun':'Libra','Moon':'Scorpio','Mars':'Cancer','Mercury':'Pisces',
+    'Jupiter':'Capricorn','Venus':'Virgo','Saturn':'Aries',
+    'Rahu':'Sagittarius','Ketu':'Gemini',
+}
+OWN_SIGNS = {
+    'Sun':['Leo'],'Moon':['Cancer'],'Mars':['Aries','Scorpio'],
+    'Mercury':['Gemini','Virgo'],'Jupiter':['Sagittarius','Pisces'],
+    'Venus':['Taurus','Libra'],'Saturn':['Capricorn','Aquarius'],
+}
+MOOLATRIKONA = {
+    'Sun':'Leo','Moon':'Taurus','Mars':'Aries','Mercury':'Virgo',
+    'Jupiter':'Sagittarius','Venus':'Libra','Saturn':'Aquarius',
+}
+
+# Nakshatras
+NAKSHATRA_NAMES = [
+    'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
+    'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni',
+    'Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+    'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha',
+    'Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati',
+]
+NAKSHATRA_LORDS = (
+    ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'] * 3
+)
+
+# House significations
+HOUSE_KARKA = {
+    1: 'Self, body, vitality, personality, appearance',
+    2: 'Wealth, family, speech, food, face, right eye',
+    3: 'Courage, siblings, short travel, communication, arms, desire',
+    4: 'Mother, home, property, happiness, vehicles, chest, education',
+    5: 'Children, intelligence, past-life merit, speculation, creativity, stomach',
+    6: 'Enemies, disease, debts, service, litigation, waist',
+    7: 'Spouse, marriage, partnerships, business, foreign travel, groin',
+    8: 'Longevity, inheritance, transformation, occult, hidden matters, accidents',
+    9: 'Father, dharma, luck, religion, guru, higher education, thighs',
+    10:'Career, fame, authority, action, public life, status, knees',
+    11:'Gains, income, elder siblings, social network, desires, ankles',
+    12:'Loss, liberation, foreign lands, spirituality, bed pleasures, left eye',
+}
+KENDRA_HOUSES  = {1, 4, 7, 10}
+TRIKONA_HOUSES = {1, 5, 9}
+DUSTHANA_HOUSES= {6, 8, 12}
+UPACHAYA_HOUSES= {3, 6, 10, 11}
+
+# Special planetary aspects (beyond universal 7th aspect)
+SPECIAL_ASPECTS = {
+    'Mars':   [4, 8],
+    'Jupiter':[5, 9],
+    'Saturn': [3, 10],
+    'Rahu':   [5, 9],
+    'Ketu':   [5, 9],
+}
+
+# Expanded keyword set for rule scoring
+ASTRO_KEYWORDS = {
+    'planets':   ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu',
+                  'surya','chandra','mangal','budha','guru','shukra','shani'],
+    'signs':     ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra',
+                  'Scorpio','Sagittarius','Capricorn','Aquarius','Pisces',
+                  'mesha','vrishabha','mithuna','karka','simha','kanya',
+                  'tula','vrischika','dhanu','makara','kumbha','meena'],
+    'yoga':      ['yoga','dosha','conjunction','aspect','exalted','debilitated',
+                  'retrograde','kendra','trikona','trine','dharma','karma',
+                  'raja','dhana','neecha','uccha','mool','vargottama',
+                  'parivartana','exchange','gajakesari','mahapurusha'],
+    'house':     ['house','bhava','lagna','ascendant','lord','sthana','kshetra',
+                  'dusthana','upachaya','kendra','angle','succedent','trikonas'],
+    'dasha':     ['dasha','mahadasha','antardasha','bhukti','period','transit',
+                  'vimsottari','pratyantara','antaradasha'],
+    'predict':   ['gives','causes','results','indicates','shows','produces',
+                  'brings','native','person','born','will','bestows','confers',
+                  'grants','makes','renders','likely','prone','suffers','enjoys'],
+    'nakshatra': ['nakshatra','star','pada','asterism','lunar','mansion'],
+    'quality':   ['benefic','malefic','natural','functional','exaltation','debilitation',
+                  'moolatrikona','own sign','friendly','enemy','neecha bhanga','dig bala'],
+}
+
+# Compiled regex formula patterns for structured rule extraction
+_PLANETS_RE = r'(?:Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)'
+_SIGNS_RE   = r'(?:Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Sagittarius|Capricorn|Aquarius|Pisces)'
+_HOUSE_RE   = r'(\d+)(?:st|nd|rd|th)?'
+
+FORMULA_PATTERNS = [
+    # planet in sign: "Jupiter in Cancer"
+    (re.compile(rf'({_PLANETS_RE})\s+in\s+({_SIGNS_RE})', re.I),
+     'planet_in_sign', ('planet','sign')),
+    # planet in house: "Mercury in the 10th house / bhava"
+    (re.compile(rf'({_PLANETS_RE})\s+(?:in|placed\s+in|posited\s+in|occupies?)\s+(?:the\s+)?{_HOUSE_RE}\s*(?:house|bhava|from)?', re.I),
+     'planet_in_house', ('planet','house')),
+    # lord of X in Y: "lord of 5th in 9th"
+    (re.compile(r'lord\s+of\s+(?:the\s+)?' + _HOUSE_RE + r'\s*(?:house|bhava)?\s+(?:in|placed|posited)\s+(?:the\s+)?' + _HOUSE_RE, re.I),
+     'lord_transfer', ('from_house','to_house')),
+    # conjunction: "Mars and Jupiter" / "Venus with Moon"
+    (re.compile(rf'({_PLANETS_RE})\s+(?:and|with|conjunct[s]?|combined?\s+with)\s+({_PLANETS_RE})', re.I),
+     'conjunction', ('planet1','planet2')),
+    # aspect: "Saturn aspects Jupiter" / "Jupiter aspecting Mars"
+    (re.compile(rf'({_PLANETS_RE})\s+(?:aspects?|aspecting)\s+({_PLANETS_RE})', re.I),
+     'aspect', ('aspector','aspected')),
+    # exalted: "Sun exalted" / "exalted Jupiter"
+    (re.compile(rf'(?:({_PLANETS_RE})\s+(?:exalted|uccha|in\s+exaltation)|(?:exalted|uccha)\s+({_PLANETS_RE}))', re.I),
+     'exaltation', ('planet','planet_alt')),
+    # debilitated: "Moon debilitated" / "neecha Saturn"
+    (re.compile(rf'(?:({_PLANETS_RE})\s+(?:debilitated|neecha|in\s+debilitation)|(?:debilitated|neecha)\s+({_PLANETS_RE}))', re.I),
+     'debilitation', ('planet','planet_alt')),
+    # retrograde
+    (re.compile(rf'(?:retrograde|vakri)\s+({_PLANETS_RE})', re.I),
+     'retrograde', ('planet',)),
+    # yoga name: "Gaja Kesari Yoga", "Raja Yoga"
+    (re.compile(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\s+Yoga)', re.I),
+     'yoga_name', ('name',)),
+    # kendra/trikona placement
+    (re.compile(rf'({_PLANETS_RE})\s+in\s+(?:kendra|trikona|dusthana|upachaya|angle|trine)', re.I),
+     'special_house_type', ('planet',)),
+]
 
 # ── helper utilities ────────────────────────────────────────────────────────
 def safe_float(value, default=0.0):
@@ -186,8 +307,20 @@ def parse_birth_data(data):
     return place, jd, latitude, longitude, timezone
 
 def get_planet_positions(jd, place):
-    """Return list of dicts with full planet info."""
+    """Return list of dicts with full planet info. House = bhava relative to Lagna."""
     raw = charts.rasi_chart(jd, place)
+
+    # Pass 1 — locate Lagna rasi so all houses are computed relative to it
+    lagna_rasi = 0
+    for entry in raw:
+        if isinstance(entry, (list, tuple)) and len(entry) == 2:
+            pid, pos = entry
+            if pid == 'L':
+                lagna_rasi = int(pos[0]) % 12 if isinstance(pos, (list, tuple)) and pos else 0
+                break
+
+    NAK_SPAN = 360.0 / 27.0          # degrees per nakshatra (≈13.33°)
+
     positions = []
     for entry in raw:
         if isinstance(entry, (list, tuple)) and len(entry) == 2:
@@ -198,29 +331,56 @@ def get_planet_positions(jd, place):
                 rasi_idx, lon_in_rasi = 0, safe_float(pos)
         else:
             continue
-        abs_lon = rasi_idx * 30.0 + safe_float(lon_in_rasi)
-        # rasi_chart uses 'L' (string) for Lagna; ints for planets 0-8
+
+        rasi_int    = int(rasi_idx) % 12
+        abs_lon     = rasi_int * 30.0 + safe_float(lon_in_rasi)
+        # ── Bhava (house) = rasi position relative to Lagna (1-based) ──
+        house       = ((rasi_int - lagna_rasi) % 12) + 1
+        sign        = RASI_NAMES[rasi_int]
+
+        # Nakshatra & pada
+        nak_idx     = int(abs_lon / NAK_SPAN) % 27
+        nak_pada    = int((abs_lon % NAK_SPAN) / (NAK_SPAN / 4)) + 1
+
+        # Planet name
         if planet_id == 'L':
-            p_name = "Lagna"
-            p_id   = 9
+            p_name, p_id, house = 'Lagna', 9, 1
         elif isinstance(planet_id, int) and planet_id < len(PLANET_NAMES):
-            p_name = PLANET_NAMES[planet_id]
-            p_id   = planet_id
+            p_name, p_id = PLANET_NAMES[planet_id], planet_id
         else:
             try:
                 p_id   = int(planet_id)
-                p_name = PLANET_NAMES[p_id] if p_id < len(PLANET_NAMES) else f"P{p_id}"
+                p_name = PLANET_NAMES[p_id] if p_id < len(PLANET_NAMES) else f'P{p_id}'
             except Exception:
-                p_name = str(planet_id)
-                p_id   = -1
+                p_name, p_id = str(planet_id), -1
+
+        # Dignity
+        if   EXALTATION_SIGN.get(p_name) == sign:  dignity = 'exalted'
+        elif DEBILITATION_SIGN.get(p_name) == sign: dignity = 'debilitated'
+        elif sign == MOOLATRIKONA.get(p_name):       dignity = 'moolatrikona'
+        elif sign in OWN_SIGNS.get(p_name, []):      dignity = 'own'
+        else:                                         dignity = 'neutral'
+
+        # House type
+        h_type = ('kendra'   if house in KENDRA_HOUSES  else
+                  'trikona'  if house in TRIKONA_HOUSES  else
+                  'dusthana' if house in DUSTHANA_HOUSES else
+                  'upachaya' if house in UPACHAYA_HOUSES else 'neutral')
+
         positions.append({
-            "id":          p_id,
-            "name":        p_name,
-            "rasi":        int(rasi_idx),
-            "sign":        RASI_NAMES[int(rasi_idx) % 12],
-            "house":       int(rasi_idx) + 1,
-            "lon_in_sign": round(safe_float(lon_in_rasi), 4),
-            "longitude":   round(abs_lon, 4)
+            'id':          p_id,
+            'name':        p_name,
+            'rasi':        rasi_int,
+            'sign':        sign,
+            'house':       house,
+            'house_type':  h_type,
+            'lord':        SIGN_LORDS.get(sign, ''),
+            'dignity':     dignity,
+            'nakshatra':   NAKSHATRA_NAMES[nak_idx],
+            'nak_pada':    nak_pada,
+            'nak_lord':    NAKSHATRA_LORDS[nak_idx],
+            'lon_in_sign': round(safe_float(lon_in_rasi), 4),
+            'longitude':   round(abs_lon, 4),
         })
     return positions
 
@@ -244,7 +404,8 @@ def _compute_pratyantara(start_str, end_str):
     except Exception:
         return []
 
-# ── Rule extraction helpers ───────────────────────────────────────────────────
+# ── Rule extraction & formula evaluation ────────────────────────────────────
+
 def _score_astro_relevance(text):
     tl, score = text.lower(), 0
     for kws in ASTRO_KEYWORDS.values():
@@ -252,126 +413,325 @@ def _score_astro_relevance(text):
         if hits: score += 1 + min(hits, 4)
     return score
 
-def _extract_rules(text, min_score=3):
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    rules = []
+def _extract_formulas_from_text(text):
+    """Pull structured formula tags from a sentence using FORMULA_PATTERNS."""
+    formulas = []
+    for pat, ftype, gnames in FORMULA_PATTERNS:
+        for m in pat.finditer(text):
+            formula = {'type': ftype}
+            for i, gname in enumerate(gnames):
+                try:
+                    val = m.group(i + 1)
+                except IndexError:
+                    val = None
+                if val:
+                    if 'house' in gname:
+                        try: val = int(re.sub(r'[^0-9]', '', val))
+                        except: pass
+                    formula[gname] = val
+            # For alt-group patterns (exaltation/debilitation)
+            if 'planet_alt' in formula and not formula.get('planet'):
+                formula['planet'] = formula.pop('planet_alt')
+            elif 'planet_alt' in formula:
+                formula.pop('planet_alt')
+            formulas.append(formula)
+    return formulas
+
+def _extract_rules(text, min_score=2):
+    """Extract astrological rules with structured formula tags from raw text."""
+    sentences = re.split(r'(?<=[.!?])\s+|\n(?=[A-Z0-9\u2018\u201c])', text)
+    rules, seen = [], set()
     for sent in sentences:
         sent = sent.strip()
-        if not (40 <= len(sent) <= 700): continue
+        if not (35 <= len(sent) <= 900): continue
+        key = sent[:80].lower()
+        if key in seen: continue
+        seen.add(key)
         score = _score_astro_relevance(sent)
         if score < min_score: continue
-        sl   = sent.lower()
+        sl = sent.lower()
         cats = []
-        if any(w in sl for w in ASTRO_KEYWORDS['yoga']):  cats.append('yoga')
-        if any(w in sl for w in ASTRO_KEYWORDS['dasha']): cats.append('dasha')
-        if any(w in sl for w in ASTRO_KEYWORDS['house']): cats.append('house')
+        if any(w in sl for w in ASTRO_KEYWORDS['yoga']):      cats.append('yoga')
+        if any(w in sl for w in ASTRO_KEYWORDS['dasha']):     cats.append('dasha')
+        if any(w in sl for w in ASTRO_KEYWORDS['house']):     cats.append('house')
+        if any(w in sl for w in ASTRO_KEYWORDS['nakshatra']): cats.append('nakshatra')
+        if any(w in sl for w in ASTRO_KEYWORDS['quality']):   cats.append('dignity')
         if not cats: cats.append('general')
+        formulas = _extract_formulas_from_text(sent)
+        houses_raw = re.findall(r'\b([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhava)', sl)
         rules.append({
             'text':       sent,
             'score':      score,
             'categories': cats,
+            'formulas':   formulas,
             'planets':    [p for p in PLANET_NAMES[:9] if p.lower() in sl],
-            'signs':      [s for s in RASI_SIGNS         if s.lower() in sl],
+            'signs':      [s for s in RASI_SIGNS if s.lower() in sl],
+            'houses':     list({int(h) for h in houses_raw}),
         })
-    rules.sort(key=lambda r: r['score'], reverse=True)
+    rules.sort(key=lambda r: len(r['formulas']) * 3 + r['score'], reverse=True)
     return rules
 
+def _evaluate_formula(formula, positions):
+    """Return True if a structured formula applies to the current chart."""
+    p_sign  = {p['name']: p['sign']  for p in positions}
+    p_house = {p['name']: p['house'] for p in positions}
+    lagna_r = next((p['rasi'] for p in positions if p['name'] == 'Lagna'), 0)
+    ftype   = formula.get('type', '')
+    try:
+        if ftype == 'planet_in_sign':
+            pl = formula.get('planet'); sg = formula.get('sign')
+            return bool(pl and sg and p_sign.get(pl) == sg)
+
+        if ftype == 'planet_in_house':
+            pl = formula.get('planet'); h = formula.get('house')
+            return bool(pl and h and p_house.get(pl) == int(h))
+
+        if ftype == 'lord_transfer':
+            fh = formula.get('from_house'); th = formula.get('to_house')
+            if fh and th:
+                from_sign_idx = (lagna_r + int(fh) - 1) % 12
+                lord = SIGN_LORDS.get(RASI_SIGNS[from_sign_idx], '')
+                return bool(lord and p_house.get(lord) == int(th))
+
+        if ftype == 'conjunction':
+            p1 = formula.get('planet1'); p2 = formula.get('planet2')
+            return bool(p1 and p2 and p_house.get(p1) and p_house.get(p1) == p_house.get(p2))
+
+        if ftype == 'exaltation':
+            pl = formula.get('planet')
+            return bool(pl and p_sign.get(pl) == EXALTATION_SIGN.get(pl))
+
+        if ftype == 'debilitation':
+            pl = formula.get('planet')
+            return bool(pl and p_sign.get(pl) == DEBILITATION_SIGN.get(pl))
+
+        if ftype == 'aspect':
+            asp  = formula.get('aspector'); asd = formula.get('aspected')
+            if asp and asd:
+                ah = p_house.get(asp); bh = p_house.get(asd)
+                if ah and bh:
+                    diff = ((bh - ah) % 12) + 1
+                    return diff == 7 or diff in SPECIAL_ASPECTS.get(asp, [])
+    except Exception:
+        pass
+    return False
+
 def _match_rules_to_chart(rules, positions):
-    planet_signs = {p['name']: p['sign'] for p in positions}
+    """Score rules against chart using formula-level evaluation (5×weight) + keyword fallback."""
+    p_sign  = {p['name']: p['sign']  for p in positions}
+    p_house = {p['name']: p['house'] for p in positions}
     matched = []
     for rule in rules:
-        rel = 0
+        formulas = rule.get('formulas', [])
+        f_hits   = sum(1 for f in formulas if _evaluate_formula(f, positions))
+        f_miss   = len(formulas) - f_hits
+        # If rule has formulas but none hit, skip it
+        if formulas and f_hits == 0 and f_miss > 0:
+            continue
+        # Keyword-level relevance fallback
+        kw_rel = 0
         for pl in rule.get('planets', []):
-            if pl in planet_signs:
-                rel += 2
-                if planet_signs[pl] in rule.get('signs', []): rel += 4
-        if rel > 0:
-            matched.append({**rule, 'chart_relevance': rel})
+            if pl in p_sign:
+                kw_rel += 1
+                if p_sign[pl] in rule.get('signs', []):  kw_rel += 3
+                if p_house.get(pl) in rule.get('houses', []): kw_rel += 3
+        total = f_hits * 5 + kw_rel
+        if total == 0: continue
+        matched.append({
+            **rule,
+            'chart_relevance': total,
+            'formula_hits':    f_hits,
+            'formula_count':   len(formulas),
+        })
     matched.sort(key=lambda r: r['chart_relevance'], reverse=True)
-    return matched[:25]
+    return matched[:35]
+
+def _house_lord_analysis(positions):
+    """Build list of house lord placements for all 12 bhavas."""
+    lagna_rasi = next((p['rasi'] for p in positions if p['name'] == 'Lagna'), 0)
+    p_house    = {p['name']: p['house'] for p in positions}
+    rows = []
+    for h in range(1, 13):
+        sign_idx   = (lagna_rasi + h - 1) % 12
+        sign       = RASI_SIGNS[sign_idx]
+        lord       = SIGN_LORDS.get(sign, '')
+        lord_house = p_house.get(lord, '?')
+        lord_sign  = next((p['sign'] for p in positions if p['name'] == lord), '')
+        # Disposition quality
+        if lord_house == '?':
+            quality = 'unknown'
+        elif int(lord_house) in KENDRA_HOUSES | TRIKONA_HOUSES:
+            quality = 'strong'
+        elif int(lord_house) in DUSTHANA_HOUSES:
+            quality = 'challenged'
+        else:
+            quality = 'moderate'
+        rows.append({
+            'house':      h,
+            'sign':       sign,
+            'lord':       lord,
+            'lord_house': lord_house,
+            'lord_sign':  lord_sign,
+            'signif':     HOUSE_KARKA.get(h, ''),
+            'quality':    quality,
+        })
+    return rows
 
 def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None):
-    """Generate paragraph-level astrological interpretation."""
+    """Generate rich paragraph-level astrological interpretation."""
     paras = []
-    EXALT = {'Sun':'Aries','Moon':'Taurus','Mars':'Capricorn','Mercury':'Virgo',
-             'Jupiter':'Cancer','Venus':'Pisces','Saturn':'Libra',
-             'Rahu':'Gemini','Ketu':'Sagittarius'}
-    DEBIL = {'Sun':'Libra','Moon':'Scorpio','Mars':'Cancer','Mercury':'Pisces',
-             'Jupiter':'Capricorn','Venus':'Virgo','Saturn':'Aries',
-             'Rahu':'Sagittarius','Ketu':'Gemini'}
     SIGN_DESC = {
-        'Aries':'energetic, pioneering, and assertive',
-        'Taurus':'steadfast, sensual, and materially grounded',
-        'Gemini':'communicative, versatile, and intellectually curious',
-        'Cancer':'nurturing, emotionally sensitive, and home-oriented',
-        'Leo':'regal, creative, and leadership-focused',
-        'Virgo':'analytical, service-oriented, and detail-conscious',
-        'Libra':'harmonious, relationship-focused, and justice-seeking',
-        'Scorpio':'intense, transformative, and depth-seeking',
-        'Sagittarius':'philosophical, expansive, and truth-seeking',
-        'Capricorn':'disciplined, achievement-oriented, and structured',
-        'Aquarius':'innovative, humanitarian, and unconventional',
-        'Pisces':'compassionate, mystical, and spiritually attuned',
+        'Aries':'energetic, pioneering and assertive — Mars-ruled fire',
+        'Taurus':'steadfast, sensual and materially grounded — Venus-ruled earth',
+        'Gemini':'communicative, versatile and intellectually curious — Mercury-ruled air',
+        'Cancer':'nurturing, emotionally sensitive and home-oriented — Moon-ruled water',
+        'Leo':'regal, creative and leadership-focused — Sun-ruled fire',
+        'Virgo':'analytical, service-oriented and detail-conscious — Mercury-ruled earth',
+        'Libra':'harmonious, relationship-focused and justice-seeking — Venus-ruled air',
+        'Scorpio':'intense, transformative and depth-seeking — Mars-ruled water',
+        'Sagittarius':'philosophical, expansive and truth-seeking — Jupiter-ruled fire',
+        'Capricorn':'disciplined, achievement-oriented and structured — Saturn-ruled earth',
+        'Aquarius':'innovative, humanitarian and unconventional — Saturn-ruled air',
+        'Pisces':'compassionate, mystical and spiritually attuned — Jupiter-ruled water',
     }
+
+    # 1. Lagna & its lord
     lagna = next((p for p in positions if p['name'] == 'Lagna'), None)
     if lagna:
-        desc = SIGN_DESC.get(lagna['sign'], 'qualities of this sign')
+        lagna_lord_name = SIGN_LORDS.get(lagna['sign'], '')
+        ll = next((p for p in positions if p['name'] == lagna_lord_name), None)
+        ll_txt = (f" The Lagna lord {lagna_lord_name} is placed in the "
+                  f"{ll['house']}th house ({ll['sign']}), indicating that the native's "
+                  f"core life-force operates through {HOUSE_KARKA.get(ll['house'],'')}." if ll else '')
         paras.append({'title': f"{lagna['sign']} Ascendant — Core Personality",
-            'text': (f"The Lagna (Ascendant) is in {lagna['sign']} at {lagna['lon_in_sign']:.2f}°. "
-                     f"This makes the native {desc}. The Lagna lord and its dispositor "
-                     f"colour every facet of the native's life-path and self-expression."),
+            'text': (f"The Lagna is in {lagna['sign']} at {lagna['lon_in_sign']:.2f}° "
+                     f"({lagna['nakshatra']} nakshatra, pada {lagna['nak_pada']}). "
+                     f"This makes the native {SIGN_DESC.get(lagna['sign'], '')}." + ll_txt),
             'category': 'lagna', 'icon': '↑'})
+
+    # 2. Planet dignities
     for p in positions:
         if p['name'] == 'Lagna': continue
-        if p['sign'] == EXALT.get(p['name']):
-            paras.append({'title': f"{p['name']} Exalted in {p['sign']}",
-                'text': (f"{p['name']} occupies its sign of exaltation ({p['sign']}), conferring exceptional "
-                         f"strength. Its bhava flourishes and during {p['name']}'s dasha the native "
-                         f"can expect peak results in areas governed by this planet."),
+        h_sig = HOUSE_KARKA.get(p['house'], '')
+        if p['dignity'] == 'exalted':
+            paras.append({'title': f"{p['name']} Exalted in {p['sign']} (H{p['house']})",
+                'text': (f"{p['name']} is exalted in {p['sign']} in the {p['house']}th bhava "
+                         f"({h_sig}). This is maximum planetary strength — the native gains "
+                         f"greatly from this planet's domain, especially during its Mahadasha."),
                 'category': 'dignity', 'icon': '⬆'})
-        elif p['sign'] == DEBIL.get(p['name']):
-            paras.append({'title': f"{p['name']} Debilitated in {p['sign']}",
-                'text': (f"{p['name']} is in debilitation ({p['sign']}). A Neecha Bhanga may apply. "
-                         f"Remediation through mantra, gemstones, or charity aligned with {p['name']} is advisable."),
+        elif p['dignity'] == 'debilitated':
+            paras.append({'title': f"{p['name']} Debilitated in {p['sign']} (H{p['house']})",
+                'text': (f"{p['name']} is in neecha (debilitation) in {p['sign']}, "
+                         f"{p['house']}th bhava ({h_sig}). Check for Neecha Bhanga: "
+                         f"if {SIGN_LORDS.get(p['sign'],'')} or the exaltation lord is in kendra, "
+                         f"the debilitation is cancelled conferring Raja Yoga status."),
                 'category': 'dignity', 'icon': '⬇'})
+        elif p['dignity'] == 'moolatrikona':
+            paras.append({'title': f"{p['name']} in Moolatrikona (H{p['house']})",
+                'text': (f"{p['name']} occupies its moolatrikona sign {p['sign']} in the "
+                         f"{p['house']}th bhava ({h_sig}), giving strong, stable results "
+                         f"comparable to its own sign placement."),
+                'category': 'dignity', 'icon': '★'})
+
+    # 3. House lord placements — brief summary
+    lord_rows = _house_lord_analysis(positions)
+    challenged = [r for r in lord_rows if r['quality'] == 'challenged']
+    strong_lords= [r for r in lord_rows if r['quality'] == 'strong']
+    if strong_lords:
+        items = '; '.join(f"H{r['house']} lord {r['lord']} in H{r['lord_house']}"
+                          for r in strong_lords[:4])
+        paras.append({'title': 'Favourable House Lord Placements',
+            'text': (f"The lords of these houses occupy kendras or trikonas, strengthening "
+                     f"those life-areas: {items}. These lords perform well in their dashas."),
+            'category': 'house_lords', 'icon': '🏠'})
+    if challenged:
+        items = '; '.join(f"H{r['house']} lord {r['lord']} in H{r['lord_house']} (dusthana)"
+                          for r in challenged[:4])
+        paras.append({'title': 'Challenged House Lord Placements',
+            'text': (f"The lords of these houses sit in dusthanas (6/8/12), creating obstacles "
+                     f"for those life-areas: {items}. Targeted remedies are advised."),
+            'category': 'house_lords', 'icon': '⚑'})
+
+    # 4. Kendra-Trikona Raja Yoga detection
+    kendra_lords  = set()
+    trikona_lords = set()
+    lagna_rasi = next((p['rasi'] for p in positions if p['name'] == 'Lagna'), 0)
+    for h in range(1, 13):
+        si  = (lagna_rasi + h - 1) % 12
+        lord = SIGN_LORDS.get(RASI_SIGNS[si], '')
+        if h in KENDRA_HOUSES:  kendra_lords.add(lord)
+        if h in TRIKONA_HOUSES: trikona_lords.add(lord)
+    kt_yogas = kendra_lords & trikona_lords - {''}
+    if kt_yogas:
+        paras.append({'title': f"Kendra-Trikona Raja Yoga Potential ({', '.join(kt_yogas)})",
+            'text': (f"{', '.join(kt_yogas)} rule(s) both a kendra (1/4/7/10) and a trikona "
+                     f"(1/5/9), making them yoga-karakas. Their combined dasha periods are "
+                     f"exceptionally powerful for career, status, and spiritual growth."),
+            'category': 'yoga', 'icon': '👑'})
+
+    # 5. Conjunctions in houses
+    house_map = {}
+    for p in positions:
+        if p['name'] == 'Lagna': continue
+        house_map.setdefault(p['house'], []).append(p['name'])
+    for h, planets in house_map.items():
+        if len(planets) >= 2:
+            h_sig = HOUSE_KARKA.get(h, '')
+            paras.append({'title': f"Conjunction in {h}th Bhava — {' + '.join(planets)}",
+                'text': (f"{' and '.join(planets)} are conjunct in the {h}th house ({h_sig}). "
+                         f"Their combined energy fuses the significations of both planets, "
+                         f"creating a powerful influence on matters of the {h}th bhava."),
+                'category': 'conjunction', 'icon': '⊕'})
+
+    # 6. Raja Yogas from API
     if raja_yogas:
         paras.append({'title': f"{len(raja_yogas)} Raja Yoga(s) Detected",
-            'text': (f"The chart contains {len(raja_yogas)} Raja Yoga formation(s) arising from dharma-karma "
-                     f"house lord combinations. These bestow status, recognition, and achievement — "
-                     f"most powerfully during the dashas of the participating planets."),
+            'text': (f"The chart contains {len(raja_yogas)} Raja Yoga(s) from dharma-karma "
+                     f"lord combinations, conferring status and achievement during participating "
+                     f"planet dashas."),
             'category': 'yoga', 'icon': '👑'})
-        for ry in raja_yogas:
+        for ry in raja_yogas[:5]:
             txt = ry.get('effect') or ry.get('description', '')
             if txt:
                 paras.append({'title': ry.get('name', 'Raja Yoga'),
                     'text': txt[:500] + ('…' if len(txt) > 500 else ''),
                     'category': 'yoga_detail', 'icon': '☽',
                     'pairs': ry.get('pairs', '')})
+
+    # 7. Shad Bala summary
     if shad_bala and 'totals' in shad_bala:
         totals = shad_bala['totals']
         strong = [p for p, v in totals.items() if v >= 150]
-        weak   = [p for p, v in totals.items() if v <  80]
+        weak   = [p for p, v in totals.items() if v < 80]
         if strong:
             paras.append({'title': 'Planets of Superior Strength',
-                'text': (f"{', '.join(strong)} show superior Shad Bala strength. They deliver results "
-                         f"powerfully during their dasha periods and strengthen any house they occupy or aspect."),
+                'text': (f"{', '.join(strong)} exceed 150 Rupas in Shad Bala — they deliver "
+                         f"powerful, reliable results during their dashas and bless the houses "
+                         f"they occupy or aspect."),
                 'category': 'strength', 'icon': '💪'})
         if weak:
             paras.append({'title': 'Planets Requiring Remediation',
-                'text': (f"{', '.join(weak)} carry below-threshold Shad Bala. Gemstone therapy, mantra japa, "
-                         f"and charitable acts aligned with these planets can strengthen their benefic influence."),
+                'text': (f"{', '.join(weak)} are below 80 Rupas threshold. Gemstone therapy, "
+                         f"mantra japa, and charity aligned with these planets can help."),
                 'category': 'strength', 'icon': '🔻'})
+
+    # 8. Doshas
     active = [k for k, v in doshas.items()
               if 'no' not in str(v).lower() and 'not' not in str(v).lower()]
     if active:
         paras.append({'title': 'Doshas Present',
-            'text': (f"Active doshas: {', '.join(active)}. Each represents a karmic pattern requiring "
-                     f"targeted remedies. A qualified Jyotishi can prescribe personalised remediation."),
+            'text': (f"Active doshas detected: {', '.join(active)}. Each represents a karmic "
+                     f"pattern; a Jyotishi can prescribe personalised remediation."),
             'category': 'dosha', 'icon': '⚠'})
+
+    # 9. Classical text matches
     if matched_rules:
-        paras.append({'title': f"{len(matched_rules)} Classical Rules Matched to This Chart",
-            'text': (f"Analysis of uploaded classical texts found {len(matched_rules)} rules directly "
-                     f"applicable to this chart — providing depth beyond standard algorithmic interpretation."),
+        formula_matched = [r for r in matched_rules if r.get('formula_hits', 0) > 0]
+        paras.append({'title': f"{len(matched_rules)} Classical Rules Matched ({len(formula_matched)} formula-verified)",
+            'text': (f"Cross-referencing uploaded classical texts found {len(matched_rules)} "
+                     f"applicable rules — {len(formula_matched)} verified by direct formula "
+                     f"evaluation against this chart's positions. These provide authoritative "
+                     f"classical backing beyond algorithmic interpretation."),
             'category': 'classical', 'icon': '📚'})
     return paras
 

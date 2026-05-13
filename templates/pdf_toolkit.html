@@ -17,6 +17,18 @@
 .rule-score{display:inline-block;min-width:28px;text-align:center;background:var(--accent,#c084fc);color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .28rem}
 .rule-cat{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(192,132,252,.13);color:var(--accent,#c084fc);font-size:.7rem}
 .rule-planets{display:inline-block;padding:.07rem .38rem;border-radius:99px;background:rgba(96,165,250,.13);color:#60a5fa;font-size:.7rem}
+.formula-tag{display:inline-block;padding:.05rem .38rem;border-radius:3px;font-size:.68rem;font-family:monospace;font-weight:600;border:1px solid;margin:.05rem}
+.ft-planet_in_sign{background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.3)}
+.ft-planet_in_house{background:rgba(251,146,60,.1);color:#fb923c;border-color:rgba(251,146,60,.3)}
+.ft-lord_transfer{background:rgba(192,132,252,.1);color:#c084fc;border-color:rgba(192,132,252,.3)}
+.ft-conjunction{background:rgba(250,204,21,.1);color:#facc21;border-color:rgba(250,204,21,.3)}
+.ft-aspect{background:rgba(248,113,113,.1);color:#f87171;border-color:rgba(248,113,113,.3)}
+.ft-exaltation{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.4)}
+.ft-debilitation{background:rgba(248,113,113,.15);color:#f87171;border-color:rgba(248,113,113,.4)}
+.ft-yoga_name{background:rgba(147,197,253,.1);color:#93c5fd;border-color:rgba(147,197,253,.3)}
+.ft-default{background:rgba(148,163,184,.1);color:#94a3b8;border-color:rgba(148,163,184,.3)}
+.rule-text{flex:1;line-height:1.5}
+.rule-formulas{display:flex;flex-wrap:wrap;gap:.15rem;margin-top:.3rem;width:100%}
 .cat-bar-wrap{display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem}
 .cat-bar-bg{flex:1;height:10px;border-radius:99px;background:var(--border,#2a2a3a);overflow:hidden}
 .cat-bar-fill{height:100%;border-radius:99px;background:var(--accent,#c084fc)}
@@ -148,17 +160,37 @@ async function parseRules(){
   }catch(e){}
 }
 
+function fmtFormula(f){
+  const t=f.type||'default';
+  const cls='ft-'+(t||'default');
+  let lbl='';
+  if(t==='planet_in_sign')   lbl=`${f.planet||'?'} in ${f.sign||'?'}`;
+  else if(t==='planet_in_house') lbl=`${f.planet||'?'} in H${f.house||'?'}`;
+  else if(t==='lord_transfer')   lbl=`L${f.from_house||'?'} → H${f.to_house||'?'}`;
+  else if(t==='conjunction')     lbl=`${f.planet1||'?'} ⊕ ${f.planet2||'?'}`;
+  else if(t==='aspect')          lbl=`${f.aspector||'?'} ↗ ${f.aspected||'?'}`;
+  else if(t==='exaltation')      lbl=`${f.planet||'?'} ↑UCH`;
+  else if(t==='debilitation')    lbl=`${f.planet||'?'} ↓NEE`;
+  else if(t==='yoga_name')       lbl=f.name||'Yoga';
+  else                           lbl=t.replace(/_/g,' ');
+  return `<span class="formula-tag ${cls}" title="${t}">${lbl}</span>`;
+}
+
 function renderRules(rules){
   let h='';
-  rules.slice(0,150).forEach(r=>{
+  rules.slice(0,200).forEach(r=>{
     const cats=(r.categories||[]).map(c=>`<span class="rule-cat">${c}</span>`).join('');
     const ps=(r.planets||[]).map(p=>`<span class="rule-planets">${p}</span>`).join('');
+    const fmls=(r.formulas||[]).map(fmtFormula).join('');
+    const fcount=r.formulas&&r.formulas.length?
+      `<span style="font-size:.68rem;color:var(--muted,#888);margin-left:.2rem">[${r.formulas.length} formula${r.formulas.length>1?'s':''}]</span>`:'';
     h+=`<div class="rule-row">
-      <span class="rule-score">${r.score}</span>${cats}${ps}
-      <span style="flex:1">${r.text||''}</span>
+      <span class="rule-score">${r.score}</span>${cats}${ps}${fcount}
+      <span class="rule-text">${r.text||''}</span>
+      ${fmls?`<div class="rule-formulas">${fmls}</div>`:''}
     </div>`;
   });
-  if(rules.length>150)h+=`<p style="color:var(--muted,#888);font-size:.8rem;padding:.4rem">…and ${rules.length-150} more rules (use search to narrow down)</p>`;
+  if(rules.length>200)h+=`<p style="color:var(--muted,#888);font-size:.8rem;padding:.4rem">…and ${rules.length-200} more rules (use search to narrow down)</p>`;
   document.getElementById('ruleList').innerHTML=h||'<p style="color:var(--muted,#888);font-size:.85rem">No rules extracted at this score threshold.</p>';
 }
 

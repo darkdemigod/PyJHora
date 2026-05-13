@@ -13,13 +13,23 @@
 .planet-table td{padding:.45rem .7rem;border-bottom:1px solid var(--border,#2a2a3a)}
 .planet-table tr:hover td{background:rgba(192,132,252,.07)}
 .badge{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.75rem;font-weight:700;margin:.1rem}
-.badge-exalt{background:#16421e;color:#4ade80}.badge-debil{background:#421616;color:#f87171}.badge-own{background:#1e2d42;color:#60a5fa}
-.si-chart{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);width:320px;height:320px;border:2px solid var(--border,#2a2a3a);border-radius:6px;overflow:hidden}
-.si-cell{border:1px solid var(--border,#2a2a3a);padding:.3rem;display:flex;flex-direction:column;gap:.1rem;font-size:.7rem}
-.si-cell.center{background:rgba(0,0,0,.25);opacity:.4}
-.si-sign{color:var(--muted,#888);font-size:.6rem;font-weight:700;text-transform:uppercase}
-.si-planet{display:inline-block;background:var(--accent,#c084fc);color:#111;border-radius:3px;padding:.02rem .22rem;margin:.04rem;font-size:.65rem;font-weight:800}
-.si-planet.lagna{background:#f59e0b}
+.badge-exalt{background:#16421e;color:#4ade80}.badge-debil{background:#421616;color:#f87171}.badge-own{background:#1e2d42;color:#60a5fa}.badge-mool{background:#1e291e;color:#86efac}.badge-neutral{background:transparent;color:var(--muted,#888)}
+.si-chart{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);width:340px;height:340px;border:2px solid var(--border,#2a2a3a);border-radius:6px;overflow:hidden}
+.si-cell{border:1px solid var(--border,#2a2a3a);padding:.25rem .3rem;display:flex;flex-direction:column;gap:.08rem;font-size:.68rem;position:relative}
+.si-cell.center{background:rgba(0,0,0,.25);opacity:.3}
+.si-cell-top{display:flex;justify-content:space-between;align-items:center}
+.si-sign{color:var(--muted,#888);font-size:.56rem;font-weight:700;text-transform:uppercase}
+.si-house-num{color:rgba(192,132,252,.5);font-size:.58rem;font-weight:800}
+.si-planet{display:inline-block;background:var(--accent,#c084fc);color:#111;border-radius:3px;padding:.02rem .2rem;margin:.03rem;font-size:.63rem;font-weight:800}
+.si-planet.lagna-pill{background:#f59e0b}
+.si-planet.exalt{background:#4ade80;color:#052e16}.si-planet.debil{background:#f87171;color:#450a0a}.si-planet.own{background:#60a5fa;color:#0c1a2e}
+.si-cell.lagna-cell{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.35)}
+.house-table{width:100%;border-collapse:collapse;font-size:.83rem}
+.house-table th{background:var(--card-bg,#1a1a2e);padding:.45rem .65rem;text-align:left;color:var(--accent,#c084fc);font-weight:600;border-bottom:2px solid var(--border,#2a2a3a)}
+.house-table td{padding:.4rem .65rem;border-bottom:1px solid var(--border,#2a2a3a);vertical-align:top}
+.house-table tr:hover td{background:rgba(192,132,252,.05)}
+.hq-strong{color:#4ade80}.hq-moderate{color:#facc15}.hq-challenged{color:#f87171}
+.htype-k{color:#c084fc}.htype-t{color:#86efac}.htype-d{color:#f87171}.htype-u{color:#fb923c}
 .yoga-card{border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:1rem;margin-bottom:.8rem;background:var(--card-bg,#1a1a2e)}
 .yoga-card h4{margin:0 0 .35rem;color:var(--accent,#c084fc);font-size:.95rem}
 .yoga-pairs{font-size:.75rem;color:var(--muted,#888);margin-bottom:.35rem}
@@ -78,6 +88,7 @@
 <div id="resultArea" style="display:none">
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="planets">🪐 Planets</button>
+    <button class="tab-btn" data-tab="houses">🏠 Houses</button>
     <button class="tab-btn" data-tab="yogas">✨ Yogas</button>
     <button class="tab-btn" data-tab="strengths">💪 Strengths</button>
     <button class="tab-btn" data-tab="dashas">⏱ Dashas</button>
@@ -90,12 +101,21 @@
         <div id="planetTableWrap"></div>
       </div>
       <div>
-        <h3 style="margin-bottom:.7rem">South Indian Chart</h3>
+        <h3 style="margin-bottom:.7rem">Rasi Chart (South Indian)</h3>
         <div id="siChart" class="si-chart"></div>
-        <p style="color:var(--muted,#888);font-size:.7rem;margin-top:.35rem">L = Lagna · abbreviations for planets</p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;font-size:.69rem;color:var(--muted,#888);margin-top:.4rem">
+          <span><span class="si-planet exalt" style="display:inline-block">Ex</span> Exalted</span>
+          <span><span class="si-planet debil" style="display:inline-block">De</span> Debilitated</span>
+          <span><span class="si-planet own" style="display:inline-block">Ow</span> Own Sign</span>
+          <span><span class="si-planet lagna-pill" style="display:inline-block">L</span> Lagna</span>
+        </div>
       </div>
     </div>
     <div id="doshaSection" style="margin-top:1.2rem"></div>
+  </div>
+
+  <div id="tab-houses" class="tab-panel">
+    <div id="houseSection"></div>
   </div>
 
   <div id="tab-yogas" class="tab-panel">
@@ -160,36 +180,94 @@ async function calcChart(e){
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     document.querySelector('[data-tab="planets"]').classList.add('active');
     document.getElementById('tab-planets').classList.add('active');
-    renderPlanets(data);renderYogas(data);renderStrengths(data);
+    renderPlanets(data);renderHouses(data);renderYogas(data);renderStrengths(data);
   }catch(err){status.textContent='❌ '+err;}
 }
 
 function openInterpret(){window.location.href='/interpret?chart_id='+encodeURIComponent(_chartId);}
 
+// House type label helpers
+const H_TYPE_CLS={kendra:'htype-k',trikona:'htype-t',dusthana:'htype-d',upachaya:'htype-u',neutral:''};
+const H_TYPE_LBL={kendra:'Kendra',trikona:'Trikona',dusthana:'Dusthana',upachaya:'Upachaya',neutral:''};
+const HOUSE_KARKA=[
+  '','Self, body, vitality, personality',
+  'Wealth, family, speech, food','Courage, siblings, short travel, communication',
+  'Mother, home, property, happiness','Children, intelligence, past-life merit, creativity',
+  'Enemies, disease, debts, service','Spouse, marriage, partnerships, business',
+  'Longevity, inheritance, transformation, occult','Father, dharma, luck, religion',
+  'Career, fame, authority, public life','Gains, income, elder siblings, social network',
+  'Loss, liberation, foreign lands, spirituality'
+];
+
 function renderPlanets(data){
   const planets=data.planets||[];
-  let html='<table class="planet-table"><thead><tr><th>Planet</th><th>Sign</th><th>House</th><th>Degree</th><th>Status</th></tr></thead><tbody>';
+
+  // Planet table — with nakshatra, house type, dignity
+  let html=`<table class="planet-table"><thead><tr>
+    <th>Planet</th><th>Sign</th><th>H</th><th>Type</th>
+    <th>Nakshatra</th><th>Pd</th><th>Degree</th><th>Dignity</th>
+  </tr></thead><tbody>`;
   planets.forEach(p=>{
-    const isE=EXALT[p.name]===p.sign,isD=DEBIL[p.name]===p.sign,isO=(OWN[p.name]||[]).includes(p.sign);
-    const badge=isE?'<span class="badge badge-exalt">Exalted</span>':isD?'<span class="badge badge-debil">Debilitated</span>':isO?'<span class="badge badge-own">Own Sign</span>':'';
-    html+=`<tr><td><strong>${p.name}</strong></td><td>${p.sign}</td><td>${p.house}</td><td>${(p.lon_in_sign||0).toFixed(2)}°</td><td>${badge}</td></tr>`;
+    const dig=p.dignity||'neutral';
+    const digBadge=dig==='exalted'?'<span class="badge badge-exalt">Exalted</span>':
+                   dig==='debilitated'?'<span class="badge badge-debil">Neecha</span>':
+                   dig==='moolatrikona'?'<span class="badge badge-mool">Mool</span>':
+                   dig==='own'?'<span class="badge badge-own">Own</span>':'';
+    const htc=H_TYPE_CLS[p.house_type||'']||'';
+    const htl=H_TYPE_LBL[p.house_type||'']||'';
+    const hspan=htl?`<span class="${htc}" style="font-size:.72rem">${htl}</span>`:'';
+    html+=`<tr>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.sign}</td>
+      <td><strong>${p.house||'?'}</strong></td>
+      <td>${hspan}</td>
+      <td>${p.nakshatra||''}</td>
+      <td style="color:var(--muted,#888)">${p.nak_pada||''}</td>
+      <td>${(p.lon_in_sign||0).toFixed(2)}°</td>
+      <td>${digBadge}</td>
+    </tr>`;
   });
   html+='</tbody></table>';
   document.getElementById('planetTableWrap').innerHTML=html;
 
-  // SI chart
-  const grid=Array.from({length:4},()=>Array.from({length:4},()=>({sign:'',rasi:-1,ps:[]})));
-  for(const[rasi,pos]of Object.entries(SI_POS)){const[r,c]=pos;grid[r][c].sign=SI_ABB[+rasi];grid[r][c].rasi=+rasi;}
+  // SI chart — with house numbers relative to Lagna & dignity-coloured planets
+  const lagna=planets.find(p=>p.name==='Lagna');
+  const lagnaRasi=lagna?lagna.rasi:0;
+  // Build dignity map
+  const digMap={};
+  planets.forEach(p=>{digMap[p.name]=p.dignity||'neutral';});
+
+  const grid=Array.from({length:4},()=>Array.from({length:4},()=>({sign:'',rasi:-1,houseNum:0,ps:[]})));
+  for(const[rasi,pos]of Object.entries(SI_POS)){
+    const[r,c]=pos,ri=+rasi;
+    grid[r][c].sign=SI_ABB[ri];
+    grid[r][c].rasi=ri;
+    grid[r][c].houseNum=((ri-lagnaRasi+12)%12)+1;
+  }
   planets.forEach(p=>{
     const ri=SIGN_F.indexOf(p.sign);
-    if(ri>=0&&SI_POS[ri]){const[r,c]=SI_POS[ri];grid[r][c].ps.push(p.name);}
+    if(ri>=0&&SI_POS[ri]){const[r,c]=SI_POS[ri];grid[r][c].ps.push(p);}
   });
+
   let si='';
   for(let r=0;r<4;r++)for(let c=0;c<4;c++){
     if(CENTER.some(([cr,cc])=>cr===r&&cc===c)){si+='<div class="si-cell center"></div>';continue;}
     const cell=grid[r][c];
-    let ps='';cell.ps.forEach(pn=>{ps+=`<span class="si-planet${pn==='Lagna'?' lagna':''}">${pn==='Lagna'?'L':pn.slice(0,2)}</span>`;});
-    si+=`<div class="si-cell"><span class="si-sign">${cell.sign}</span>${ps}</div>`;
+    const isLagnaCell=cell.houseNum===1;
+    let ps='';
+    cell.ps.forEach(p=>{
+      const dig=digMap[p.name]||'neutral';
+      const cls=p.name==='Lagna'?' lagna-pill':dig==='exalted'?' exalt':dig==='debilitated'?' debil':dig==='own'?' own':'';
+      const lbl=p.name==='Lagna'?'L':p.name.slice(0,2);
+      ps+=`<span class="si-planet${cls}" title="${p.name} | H${p.house} | ${p.sign}">${lbl}</span>`;
+    });
+    si+=`<div class="si-cell${isLagnaCell?' lagna-cell':''}">
+      <div class="si-cell-top">
+        <span class="si-sign">${cell.sign}</span>
+        <span class="si-house-num">${cell.houseNum}</span>
+      </div>
+      ${ps}
+    </div>`;
   }
   document.getElementById('siChart').innerHTML=si;
 
@@ -203,6 +281,61 @@ function renderPlanets(data){
     }
     document.getElementById('doshaSection').innerHTML=dh+'</div>';
   }
+}
+
+function renderHouses(data){
+  const planets=data.planets||[];
+  const lagna=planets.find(p=>p.name==='Lagna');
+  if(!lagna){document.getElementById('houseSection').innerHTML='<p style="color:var(--muted,#888)">No Lagna found.</p>';return;}
+  const lagnaRasi=lagna.rasi||0;
+  const SIGN_LORDS_JS={
+    'Aries':'Mars','Taurus':'Venus','Gemini':'Mercury','Cancer':'Moon',
+    'Leo':'Sun','Virgo':'Mercury','Libra':'Venus','Scorpio':'Mars',
+    'Sagittarius':'Jupiter','Capricorn':'Saturn','Aquarius':'Saturn','Pisces':'Jupiter'
+  };
+  const KENDRA={1:1,4:1,7:1,10:1},TRIKONA={1:1,5:1,9:1},DUSTHANA={6:1,8:1,12:1};
+  // Build planet-house map
+  const pHouse={},pSign={};
+  planets.forEach(p=>{pHouse[p.name]=p.house;pSign[p.name]=p.sign;});
+
+  let html=`<h3 style="margin-bottom:.8rem">Bhava Analysis — 12 Houses</h3>
+  <div style="overflow-x:auto"><table class="house-table"><thead><tr>
+    <th>H</th><th>Sign</th><th>Lord</th><th>Lord in H</th><th>Lord Sign</th><th>Quality</th><th>Planets here</th><th>Significations</th>
+  </tr></thead><tbody>`;
+
+  for(let h=1;h<=12;h++){
+    const si=(lagnaRasi+h-1)%12;
+    const sign=SIGN_F[si];
+    const lord=SIGN_LORDS_JS[sign]||'?';
+    const lordH=pHouse[lord]||'?';
+    const lordSg=pSign[lord]||'?';
+    const htype=KENDRA[h]?'kendra':TRIKONA[h]?'trikona':DUSTHANA[h]?'dusthana':'moderate';
+    let lordQ=typeof lordH==='number'?(KENDRA[lordH]||TRIKONA[lordH]?'strong':DUSTHANA[lordH]?'challenged':'moderate'):'?';
+    const qCls=lordQ==='strong'?'hq-strong':lordQ==='challenged'?'hq-challenged':'hq-moderate';
+    const inhabit=planets.filter(p=>p.name!=='Lagna'&&p.house===h).map(p=>{
+      const dig=p.dignity||'neutral';
+      const col=dig==='exalted'?'#4ade80':dig==='debilitated'?'#f87171':dig==='own'?'#60a5fa':'var(--fg,#e0e0e0)';
+      return `<span style="color:${col};font-weight:600">${p.name}</span>`;
+    }).join(', ');
+    const htypeCls=H_TYPE_CLS[htype]||'';
+    html+=`<tr>
+      <td><strong>${h}</strong></td>
+      <td>${sign}</td>
+      <td style="color:var(--accent,#c084fc)">${lord}</td>
+      <td><strong>H${lordH}</strong></td>
+      <td style="color:var(--muted,#888);font-size:.8rem">${lordSg}</td>
+      <td class="${qCls}">${lordQ}</td>
+      <td>${inhabit||'<span style="color:var(--muted,#888)">—</span>'}</td>
+      <td style="color:var(--muted,#888);font-size:.8rem">${HOUSE_KARKA[h]||''}</td>
+    </tr>`;
+  }
+  html+='</tbody></table></div>';
+  html+=`<div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.8rem">
+    <span class="hq-strong">● Strong</span> — lord in kendra or trikona
+    <span class="hq-moderate">● Moderate</span> — lord in upachaya/neutral
+    <span class="hq-challenged">● Challenged</span> — lord in dusthana (6/8/12)
+  </div>`;
+  document.getElementById('houseSection').innerHTML=html;
 }
 
 function renderYogas(data){
