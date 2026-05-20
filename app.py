@@ -617,7 +617,399 @@ BUILTIN_RULES = [
     {'text': 'When both the Lagna lord and the Lagna are unafflicted, and the Lagna lord is placed in a kendra or trikona, the native enjoys excellent health, a strong constitution, and a life where vitality supports the pursuit of all other goals.',
      'score': 8, 'categories': ['health','lagna'], 'planets': [], 'signs': [], 'houses': [1],
      'formulas': [{'type':'special_house_type','planet':'Jupiter','house_type':'trikona'}]},
+
+    # ══ COMPLETE PLANET-IN-HOUSE TABLE (all 9 planets × 12 houses) ════════════
+    # ── SUN remaining houses ──────────────────────────────────────────────────
+    {'text': 'Sun in the 2nd house brings strong family values, authority in speech, and a father-figure role in the family. Wealth is earned through effort and association with government or authority. Speech carries conviction. Dietary choices strongly affect health.',
+     'score': 7, 'categories': ['planet','wealth'], 'planets': ['Sun'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':2}]},
+    {'text': 'Sun in the 3rd house gives tremendous courage, initiative, and drive in communication. Siblings play a key role in life. The native is bold, competitive, and excels in short journeys, media, writing, and any field requiring initiative and bravery.',
+     'score': 7, 'categories': ['planet','career'], 'planets': ['Sun'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':3}]},
+    {'text': 'Sun in the 4th house can bring conflicts with the mother or difficulty with homeland, yet also grants significant property. The father may be absent or assertive. Public status and inner happiness evolve through resolving domestic tensions. Excellent for real estate.',
+     'score': 7, 'categories': ['planet','property'], 'planets': ['Sun'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':4}]},
+    {'text': 'Sun in the 6th house gives exceptional will to overcome enemies, disease, and competition. The native wins in litigation and service sectors. Health issues may arise but the Solar vitality eventually conquers. Government service is highly favored.',
+     'score': 7, 'categories': ['planet','health','career'], 'planets': ['Sun'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':6}]},
+    {'text': 'Sun in the 7th house creates tensions with the spouse or partners through ego clashes, yet the spouse is a person of status and capability. Business with government is profitable. Public dealings and trade with authority figures mark the career.',
+     'score': 7, 'categories': ['planet','marriage'], 'planets': ['Sun'], 'signs': [], 'houses': [7],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':7}]},
+    {'text': 'Sun in the 8th house creates hidden battles with authority and father-figures, possible health issues in mid-life, and a deep interest in occult, research, or inheritance matters. The native has a capacity for profound transformation and rebirth after crisis.',
+     'score': 7, 'categories': ['planet','longevity','spirituality'], 'planets': ['Sun'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':8}]},
+    {'text': 'Sun in the 9th house is exceptionally auspicious for fortune, father, and dharma. The native enjoys the blessings of a powerful, noble father figure. Higher education, law, and long journeys bring tremendous rewards. The life is inherently fortunate.',
+     'score': 9, 'categories': ['planet','spirituality','wealth'], 'planets': ['Sun'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':9}]},
+    {'text': 'Sun in the 11th house is one of the finest placements for income, aspirations, and social achievement. The native earns consistently through authority, government connections, or public roles. Elder siblings and influential networks are key assets.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Sun'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':11}]},
+    {'text': 'Sun in the 12th house inclines the native toward foreign lands, spiritual retreats, and selfless service. Government or hospital work abroad is possible. The ego must learn to dissolve into service. There is a strong past-life connection to sacred institutions.',
+     'score': 7, 'categories': ['planet','foreign','spirituality'], 'planets': ['Sun'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':12}]},
+    # ── MOON remaining houses ─────────────────────────────────────────────────
+    {'text': 'Moon in the 2nd house brings a wealthy, emotionally bonded family, sweet and fluid speech, and wealth that fluctuates with the mind. The native has an instinctive talent for accumulation. The relationship with the mother deeply shapes the voice and values.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Moon'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':2}]},
+    {'text': 'Moon in the 3rd house creates a nurturing, communicative, and emotionally expressive relationship with siblings. The native is imaginative, creative in writing or media, and emotionally driven in their courage. Frequent short journeys characterize the life.',
+     'score': 7, 'categories': ['planet','career'], 'planets': ['Moon'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':3}]},
+    {'text': 'Moon in the 5th house creates a deeply intuitive, imaginative, and emotionally creative intelligence. Children are especially beloved. The native has a natural gift for storytelling, teaching, and creative arts. Emotional fulfillment comes through creative expression.',
+     'score': 8, 'categories': ['planet','children','creativity'], 'planets': ['Moon'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':5}]},
+    {'text': 'Moon in the 6th house creates fluctuating health tied to emotional states. Service, healthcare, and healing are natural vocations. The native has strong emotional resilience in adversity and an empathic ability to serve others in need.',
+     'score': 6, 'categories': ['planet','health'], 'planets': ['Moon'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':6}]},
+    {'text': 'Moon in the 8th house creates emotional intensity, deep psychic perception, and a life shaped by transformative events. The native is drawn to occult sciences, psychology, and hidden truths. Inheritance or legacy matters are common life themes.',
+     'score': 7, 'categories': ['planet','longevity','spirituality'], 'planets': ['Moon'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':8}]},
+    {'text': 'Moon in the 9th house blesses the native with a deeply devotional nature, a loving and wise mother, and fortune from birth. Long pilgrimages, deep respect for gurus, and an intuitive grasp of dharmic truths define the life.',
+     'score': 9, 'categories': ['planet','spirituality','wealth'], 'planets': ['Moon'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':9}]},
+    {'text': 'Moon in the 10th house brings exceptional public visibility, popularity, and a career tied to the public mood. Business, politics, entertainment, and any people-facing role flourishes. The mother may be a powerful career influence or public figure herself.',
+     'score': 9, 'categories': ['planet','career'], 'planets': ['Moon'], 'signs': [], 'houses': [10],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':10}]},
+    {'text': 'Moon in the 11th house gives an emotionally driven social network, gains through women and the public, and a nurturing approach to friendships. Income fluctuates but generally grows. The mother and elder siblings are allies in life goals.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Moon'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':11}]},
+    {'text': 'Moon in the 12th house gives a deeply psychic and introspective nature, love of solitude, and a connection to foreign lands or spiritual institutions. The native is drawn to meditation, hospital work, or any form of behind-the-scenes service. Overseas life is possible.',
+     'score': 7, 'categories': ['planet','foreign','spirituality'], 'planets': ['Moon'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':12}]},
+    # ── MARS remaining houses ─────────────────────────────────────────────────
+    {'text': 'Mars in the 2nd house creates forceful, direct speech — sometimes harsh. Family conflicts around money or authority are common early in life. Wealth is earned through physical or competitive work. The voice is powerful and the appetite is strong.',
+     'score': 6, 'categories': ['planet','wealth'], 'planets': ['Mars'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':2}]},
+    {'text': 'Mars in the 3rd house is exceptionally powerful — it gives courage, athletic ability, competitive strength, and excellent relations with bold siblings. The native is decisive in communication and thrives in fields requiring physical or mental initiative.',
+     'score': 9, 'categories': ['planet','career'], 'planets': ['Mars'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':3}]},
+    {'text': 'Mars in the 4th house as Mangal Dosha on the domestic house creates property disputes, mother-related tensions, and domestic intensity. Real estate investments, engineering of the home, and forceful domestic management are indicated. Land acquisition is strong.',
+     'score': 6, 'categories': ['planet','property'], 'planets': ['Mars'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':4}]},
+    {'text': 'Mars in the 5th house brings passionate, competitive intelligence and intense connection to creative projects and children. Academic performance can be exceptional when channelled properly. The native is driven in speculative ventures and sports.',
+     'score': 7, 'categories': ['planet','children','education'], 'planets': ['Mars'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':5}]},
+    {'text': 'Mars in the 8th house is the planet of war in the house of transformation — creating the potential for accidents, surgeries, and crises that ultimately forge a warrior spirit. Long life comes through surviving intense tests. Occult research and military service are favored.',
+     'score': 7, 'categories': ['planet','longevity'], 'planets': ['Mars'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':8}]},
+    {'text': 'Mars in the 9th house creates an independent, assertive approach to dharma that may conflict with conventional religious institutions. The native carves their own philosophical path. Foreign journeys are undertaken with zeal. Conflict with the father is possible.',
+     'score': 6, 'categories': ['planet','spirituality','travel'], 'planets': ['Mars'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':9}]},
+    {'text': 'Mars in the 11th house drives competitive, ambitious accumulation of wealth and a forceful social network. The native wins income through competition, sports, or entrepreneurship. Elder siblings and allies are energetic and competitive allies in goals.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Mars'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':11}]},
+    {'text': 'Mars in the 12th house creates hidden adversaries, potential for foreign conflicts, and expenses through impulsive action. Yet it also grants tremendous capacity for behind-the-scenes executive work, foreign service, hospital management, or military postings abroad.',
+     'score': 6, 'categories': ['planet','foreign'], 'planets': ['Mars'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':12}]},
+    # ── MERCURY remaining houses ──────────────────────────────────────────────
+    {'text': 'Mercury in the 2nd house blesses speech with precision, eloquence, and commercial acuity. The native accumulates wealth through intellect, writing, trade, and communication skills. The family background is educated and articulate. Financial intelligence is exceptional.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Mercury'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':2}]},
+    {'text': 'Mercury in the 3rd house is its natural domain — this placement bestows exceptional writing, communication, and intellectual agility. The native excels in journalism, publishing, marketing, and all forms of information dissemination. Siblings share intellectual bonds.',
+     'score': 9, 'categories': ['planet','career','education'], 'planets': ['Mercury'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':3}]},
+    {'text': 'Mercury in the 4th house creates an intellectually rich home environment, an educated mother, and a love of learning from domestic and traditional sources. The native is skilled at real estate transactions and benefits from the family\'s accumulated knowledge.',
+     'score': 7, 'categories': ['planet','property','education'], 'planets': ['Mercury'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':4}]},
+    {'text': 'Mercury in the 6th house gives an analytical, service-oriented mind — excellent for medicine, accounting, legal aid, research, and data analysis. The native methodically solves problems and wins through intelligent service. Health improves through dietary attention.',
+     'score': 7, 'categories': ['planet','health','career'], 'planets': ['Mercury'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':6}]},
+    {'text': 'Mercury in the 7th house brings an intellectual spouse who communicates openly and thinks analytically. Business partnerships with intelligent, articulate partners are favorable. Legal agreements, contracts, and commercial negotiations are areas of strength.',
+     'score': 7, 'categories': ['planet','marriage','career'], 'planets': ['Mercury'], 'signs': [], 'houses': [7],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':7}]},
+    {'text': 'Mercury in the 8th house grants a deep, research-oriented mind inclined toward occult sciences, psychology, and hidden knowledge. The native makes an excellent investigator, researcher, healer, or esoteric scholar. Writing about hidden subjects is productive.',
+     'score': 7, 'categories': ['planet','spirituality','education'], 'planets': ['Mercury'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':8}]},
+    {'text': 'Mercury in the 9th house creates a philosophical, teaching, and publishing orientation. The native is drawn to higher education, law, and international intellectual discourse. Writing books of lasting philosophical value is strongly indicated. Multiple degrees are common.',
+     'score': 8, 'categories': ['planet','spirituality','education'], 'planets': ['Mercury'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':9}]},
+    {'text': 'Mercury in the 11th house brings consistent gains through intelligence, writing, and networks of intellectual peers. The native earns through communication, trading, and technology. Multiple income streams generated through mental work are characteristic.',
+     'score': 8, 'categories': ['planet','wealth'], 'planets': ['Mercury'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':11}]},
+    {'text': 'Mercury in the 12th house creates a meditative, introspective mind that finds expression in foreign lands or solitary research. The native excels in writing about spiritual or psychological subjects. Work in foreign countries or with foreign language is common.',
+     'score': 7, 'categories': ['planet','foreign','spirituality'], 'planets': ['Mercury'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':12}]},
+    # ── JUPITER remaining houses ──────────────────────────────────────────────
+    {'text': 'Jupiter in the 2nd house (2nd being the house of wealth) creates a highly auspicious financial environment — the family is prosperous, speech is wise and inspiring, and the native accumulates wealth over time. Multiple income streams through teaching or counseling are indicated.',
+     'score': 9, 'categories': ['planet','wealth'], 'planets': ['Jupiter'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':2}]},
+    {'text': 'Jupiter in the 3rd house blesses siblings with wisdom and creates an interest in philosophical writing and teaching through communication. The native is a teacher through their words and short journeys. Religious writings and philosophical content flow naturally.',
+     'score': 7, 'categories': ['planet','spirituality','education'], 'planets': ['Jupiter'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':3}]},
+    {'text': 'Jupiter in the 6th house is a powerful indicator of victory over enemies, disease, and competition — through wisdom rather than force. The native triumphs in legal disputes and heals through knowledge. Service in law, medicine, or spiritual counseling is indicated.',
+     'score': 8, 'categories': ['planet','health','career'], 'planets': ['Jupiter'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':6}]},
+    {'text': 'Jupiter in the 8th house grants a deep interest in occult wisdom, philosophical research, and the mysteries of life and death. The native has a long life protected by Jupiter\'s benefic nature. Sudden inheritance or hidden wealth may appear during Jupiter\'s dasha.',
+     'score': 8, 'categories': ['planet','longevity','spirituality'], 'planets': ['Jupiter'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':8}]},
+    {'text': 'Jupiter in the 10th house creates a distinguished career in teaching, law, finance, religion, or administration. The native commands natural authority and is respected for wisdom. This is the placement of the judge, professor, or high counsel.',
+     'score': 9, 'categories': ['planet','career'], 'planets': ['Jupiter'], 'signs': [], 'houses': [10],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':10}]},
+    {'text': 'Jupiter in the 12th house creates a deeply spiritual nature, connection to ashrams, monasteries, or foreign sacred spaces. The native may live and serve abroad. Moksha and liberation are strongly indicated in this lifetime. Spiritual study brings lasting fulfillment.',
+     'score': 8, 'categories': ['planet','foreign','spirituality'], 'planets': ['Jupiter'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':12}]},
+    # ── VENUS remaining houses ────────────────────────────────────────────────
+    {'text': 'Venus in the 3rd house brings artistic flair to communication, a beautiful speaking voice, and artistic or musical siblings. The native expresses love through creative channels. Short journeys for artistic pursuits or pleasure are characteristic.',
+     'score': 7, 'categories': ['planet','creativity'], 'planets': ['Venus'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':3}]},
+    {'text': 'Venus in the 4th house creates a beautiful, harmonious home environment with luxurious comforts. The mother is loving and aesthetically refined. The native has excellent taste in home décor, property investment, and domestic pleasures. Real estate brings comfort.',
+     'score': 8, 'categories': ['planet','property'], 'planets': ['Venus'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':4}]},
+    {'text': 'Venus in the 5th house blesses creative intelligence with artistic and romantic depth. The native excels in performance arts, design, and any creative field. Children are beautiful and artistically gifted. Romance is a central and joyful life theme.',
+     'score': 8, 'categories': ['planet','creativity','children'], 'planets': ['Venus'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':5}]},
+    {'text': 'Venus in the 6th house can indicate a service-oriented relationship with beauty — working in wellness, hospitality, fashion, or healthcare. Workplace relationships may be romantic or harmonious. Health issues may arise through over-indulgence in pleasure.',
+     'score': 6, 'categories': ['planet','health','career'], 'planets': ['Venus'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':6}]},
+    {'text': 'Venus in the 8th house gives magnetic allure through mystery and transformation. The native has an interest in tantric arts, hidden beauty, and occult aesthetics. Joint finances with a spouse or partner may be a key wealth vehicle. Transformative relationships are catalytic.',
+     'score': 7, 'categories': ['planet','marriage','spirituality'], 'planets': ['Venus'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':8}]},
+    {'text': 'Venus in the 9th house creates divine grace, a love of sacred aesthetics, and an affinity for beautiful religious or philosophical traditions. The native may marry someone foreign or of a different culture. Long-distance journeys for pleasure and culture are favored.',
+     'score': 8, 'categories': ['planet','spirituality','travel'], 'planets': ['Venus'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':9}]},
+    {'text': 'Venus in the 11th house brings gains through beauty, arts, and social connections. The native has an extensive, harmonious social network. Income from creative work, luxury goods, or entertainment is steady. Friendships with artistic people enrich the life.',
+     'score': 8, 'categories': ['planet','wealth','creativity'], 'planets': ['Venus'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':11}]},
+    {'text': 'Venus in the 12th house creates a love of hidden pleasures, private romance, and spiritual devotion to beauty. The native may have a connection to foreign arts, luxury retreats, or spiritual aesthetics. There is a deep inner richness to the sensory and spiritual life.',
+     'score': 7, 'categories': ['planet','foreign','spirituality'], 'planets': ['Venus'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':12}]},
+    # ── SATURN remaining houses ───────────────────────────────────────────────
+    {'text': 'Saturn in the 2nd house delays the accumulation of family wealth and creates early financial struggle, but ultimately produces a disciplined, careful approach to finances that builds lasting security in the second half of life. Speech is measured and authoritative.',
+     'score': 6, 'categories': ['planet','wealth'], 'planets': ['Saturn'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':2}]},
+    {'text': 'Saturn in the 3rd house creates persistence, sustained effort in communication, and a disciplined relationship with siblings. The native becomes an expert through hard work rather than natural talent. Technical writing, engineering communication, and systematic skill-building are favored.',
+     'score': 7, 'categories': ['planet','career'], 'planets': ['Saturn'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':3}]},
+    {'text': 'Saturn in the 4th house restricts early domestic happiness, may indicate a difficult mother relationship or property challenges early in life. However, Saturn in the 4th ultimately builds real estate wealth through systematic effort. Late-life domestic peace is achieved through hard work.',
+     'score': 6, 'categories': ['planet','property'], 'planets': ['Saturn'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':4}]},
+    {'text': 'Saturn in the 5th house limits children or delays having them, and creates a disciplined, structured approach to learning and creativity. Education is earned through sustained effort. Intelligence is profound but deliberate rather than spontaneous.',
+     'score': 6, 'categories': ['planet','children','education'], 'planets': ['Saturn'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':5}]},
+    {'text': 'Saturn in the 6th house is a powerful placement for overcoming enemies and disease through sustained effort and discipline. The native wins in litigation and service through perseverance. Chronic health issues eventually come under control through systematic management.',
+     'score': 8, 'categories': ['planet','health','career'], 'planets': ['Saturn'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':6}]},
+    {'text': 'Saturn in the 9th house creates a serious, conservative approach to dharma and a long, careful relationship with philosophy, law, and father figures. Formal religious structures appeal to the native. Fortune comes through sustained ethical conduct rather than luck.',
+     'score': 7, 'categories': ['planet','spirituality'], 'planets': ['Saturn'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':9}]},
+    {'text': 'Saturn in the 11th house is one of the finest placements for long-term financial gains. Wealth accumulates slowly and surely, reaching its peak in the second half of life. The social network is disciplined, professional, and built on genuine long-term relationships.',
+     'score': 9, 'categories': ['planet','wealth'], 'planets': ['Saturn'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':11}]},
+    {'text': 'Saturn in the 12th house creates a karmic pull toward solitude, ashrams, foreign service, and spiritual liberation. The native may work in institutions, jails, or hospitals. Foreign settlement is possible. There is a deep past-life orientation toward renunciation and inner freedom.',
+     'score': 7, 'categories': ['planet','foreign','spirituality'], 'planets': ['Saturn'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':12}]},
+    # ── RAHU remaining houses ─────────────────────────────────────────────────
+    {'text': 'Rahu in the 2nd house creates an obsessive drive for wealth and accumulation, often through unconventional or foreign sources. Speech may be clever but deceptive at times. Foreign foods and unusual dietary habits are indicated. Family background may have mixed or foreign elements.',
+     'score': 7, 'categories': ['planet','wealth','foreign'], 'planets': ['Rahu'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':2}]},
+    {'text': 'Rahu in the 3rd house gives bold, unconventional communication and a fearless attitude toward self-promotion. The native is a natural risk-taker in media, technology, or travel. Siblings may be foreign-born or very different in character. Courage amplified by obsession.',
+     'score': 7, 'categories': ['planet','career'], 'planets': ['Rahu'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':3}]},
+    {'text': 'Rahu in the 4th house creates an unusual domestic environment — the home may be in a foreign country, or the mother may be unconventional. Property matters have unusual twists. Foreign real estate or unconventional living arrangements are common life features.',
+     'score': 6, 'categories': ['planet','property','foreign'], 'planets': ['Rahu'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':4}]},
+    {'text': 'Rahu in the 5th house creates unconventional intelligence, unusual creative expression, and a complex relationship with children. The native may have an adopted or step-child, or children of mixed heritage. Speculative ventures have amplified risk and reward.',
+     'score': 6, 'categories': ['planet','children','creativity'], 'planets': ['Rahu'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':5}]},
+    {'text': 'Rahu in the 6th house is one of the best placements for Rahu — it creates an obsessive drive to defeat enemies, overcome disease, and dominate competition. The native may rise dramatically in service, law, or medicine. Enemies are overcome through strategy and stamina.',
+     'score': 9, 'categories': ['planet','career','health'], 'planets': ['Rahu'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':6}]},
+    {'text': 'Rahu in the 8th house creates a deep obsession with occult, psychology, tantra, and the hidden dimensions of existence. Sudden transformative events shake the life periodically. Research in taboo or unconventional fields yields surprising insights.',
+     'score': 7, 'categories': ['planet','spirituality','longevity'], 'planets': ['Rahu'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':8}]},
+    {'text': 'Rahu in the 9th house creates an unconventional approach to dharma, foreign spiritual traditions, and self-made philosophy. The native may be drawn to unusual or foreign religions. Father figures may be absent or unconventional. Long foreign journeys are characteristic.',
+     'score': 7, 'categories': ['planet','spirituality','travel'], 'planets': ['Rahu'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':9}]},
+    {'text': 'Rahu in the 11th house is the most powerful placement for wealth and gain. The native accumulates resources obsessively and builds an extensive, international social network. Gains come from technology, foreign sources, and unconventional ventures. Wealth aspirations are sky-high.',
+     'score': 10, 'categories': ['planet','wealth'], 'planets': ['Rahu'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Rahu','house':11}]},
+    # ── KETU remaining houses ─────────────────────────────────────────────────
+    {'text': 'Ketu in the 2nd house creates detachment from family wealth and material accumulation. The native may inherit spiritual rather than material wealth. Speech is direct and sometimes cutting. Past-life financial karma is being resolved, leading to spiritual renunciation of material desires.',
+     'score': 6, 'categories': ['planet','wealth','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':2}]},
+    {'text': 'Ketu in the 3rd house creates a detached, introspective approach to communication and a past-life relationship with siblings. The native may lose interest in conventional media and prefer deep, solitary study. Intuitive rather than logical communication is the strength.',
+     'score': 6, 'categories': ['planet','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':3}]},
+    {'text': 'Ketu in the 4th house creates detachment from the homeland and mother, often leading to settlement away from birth origin. The native searches for home in the spiritual realm. Past-life domestic karma must be resolved before inner peace can take root.',
+     'score': 6, 'categories': ['planet','property','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':4}]},
+    {'text': 'Ketu in the 6th house dissolves enemies — they disappear or are overcome without effort. Karmic healing of health issues occurs naturally. Service and healing from past-life wisdom emerge effortlessly. The native has an unusual immunity built from karmic strength.',
+     'score': 8, 'categories': ['planet','health','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [6],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':6}]},
+    {'text': 'Ketu in the 7th house creates a detached, spiritually oriented approach to partnerships. The native may marry a spiritual or otherworldly partner, or may prefer solitude to conventional partnership. Past-life partnership karma must be completed in this lifetime.',
+     'score': 7, 'categories': ['planet','marriage','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [7],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':7}]},
+    {'text': 'Ketu in the 8th house grants exceptional occult mastery, deep intuition into the mysteries of death and transformation, and a fearless approach to the unknown. Liberation through intense spiritual practice is strongly indicated. Longevity is protected by karmic grace.',
+     'score': 9, 'categories': ['planet','spirituality','longevity'], 'planets': ['Ketu'], 'signs': [], 'houses': [8],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':8}]},
+    {'text': 'Ketu in the 10th house creates a detached, unconventional career path. The native may frequently change professions or refuse conventional career structures. There is past-life mastery of worldly affairs, making career matters seemingly effortless yet also unimportant to the inner self.',
+     'score': 7, 'categories': ['planet','career','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [10],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':10}]},
+    {'text': 'Ketu in the 11th house creates a detached attitude toward gains and social networks — past-life wealth karma is strong, and material gains may come easily but feel hollow. The native is drawn to spiritual communities rather than commercial ones.',
+     'score': 7, 'categories': ['planet','wealth','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [11],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':11}]},
+    {'text': 'Ketu in the 12th house is the premier moksha indicator in Jyotish. The native is in the final stages of the spiritual journey, naturally inclined to liberation, meditation, and dissolution of the ego. Foreign spiritual practice, ashrams, and solitary retreat define the soul\'s direction.',
+     'score': 10, 'categories': ['planet','spirituality'], 'planets': ['Ketu'], 'signs': [], 'houses': [12],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':12}]},
+
+    # ══ KRISHNA KUMAR — SECRET OF VARGAS: DIVISIONAL CHART PRINCIPLES ═════════
+    {'text': 'The foundational law of Divisional Charts (Vargas): any planet occupying its own sign in a divisional chart gains exceptional strength in that chart\'s specific life domain — for example, Jupiter in Sagittarius in the D-9 Navamsha greatly strengthens marriage and spiritual life simultaneously. Without examining divisional chart positions, prediction of specific life events is incomplete.',
+     'score': 9, 'categories': ['yoga','spirituality'], 'planets': ['Jupiter'], 'signs': ['Sagittarius'], 'houses': [],
+     'formulas': [{'type':'planet_in_sign','planet':'Jupiter','sign':'Sagittarius'}]},
+    {'text': 'D-2 Hora Chart (Wealth Division): The Sun hora covers masculine signs (Aries, Gemini, Leo, Libra, Sagittarius, Aquarius) and indicates wealth through authority, father, government, and self-earned income. The Moon hora covers feminine signs (Taurus, Cancer, Virgo, Scorpio, Capricorn, Pisces) and indicates wealth through maternal lineage, liquid assets, public, and inheritance. Planets in the stronger hora at birth time the primary wealth source.',
+     'score': 8, 'categories': ['wealth'], 'planets': ['Sun','Moon'], 'signs': [], 'houses': [2],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':2}]},
+    {'text': 'D-3 Drekkana Chart (Siblings and Courage): The condition of the 3rd house lord in the Drekkana chart shows the quality of sibling relationships and the native\'s courage. The 1st Drekkana (0-10°) carries the sign\'s own energy; the 2nd Drekkana (10-20°) takes the 5th sign\'s energy; the 3rd Drekkana (20-30°) takes the 9th sign\'s energy. Mars and Sun in the 1st Drekkana of a sign give extraordinary courage and initiative.',
+     'score': 7, 'categories': ['career'], 'planets': ['Mars'], 'signs': [], 'houses': [3],
+     'formulas': [{'type':'planet_in_house','planet':'Mars','house':3}]},
+    {'text': 'D-4 Chaturthamsha Chart (Property and Domestic Fortune): A strong 4th lord in the D-4 Chaturthamsha indicates happiness from property, vehicles, and domestic comforts. Planets occupying their own sign or exaltation in D-4 confirm real estate gains. D-4 9th or 12th house activated by malefics can indicate settlement in a foreign country or far from birth origin.',
+     'score': 7, 'categories': ['property'], 'planets': ['Moon'], 'signs': [], 'houses': [4],
+     'formulas': [{'type':'planet_in_house','planet':'Moon','house':4}]},
+    {'text': 'D-7 Saptamsha Chart (Children and Progeny): The condition of Jupiter (natural significator of children) and the 5th lord in the Saptamsha determines the quality, number, and timing of children. Jupiter in own sign or exaltation in D-7 gives wise, successful children. Malefics in D-7 5th house delay or restrict progeny. The rasi sign of D-7 Lagna lord indicates the sex of the first child (odd sign = male, even sign = female).',
+     'score': 8, 'categories': ['children'], 'planets': ['Jupiter'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':5}]},
+    {'text': 'D-9 Navamsha Chart (Marriage, Spouse Quality, and Soul Dharma): The Navamsha is the single most important divisional chart after the birth chart. The 7th house in D-9 shows spouse quality; an exalted or own-sign planet in the D-9 7th house promises an exceptional, supportive partner. The Navamsha Lagna represents the soul\'s deeper dharmic purpose. Vargottama planets (same sign in D-1 and D-9) are doubly strong and deliver exceptional results. The Atmakaraka planet placed in the D-9 Lagna indicates the highest fulfilment of the life purpose.',
+     'score': 10, 'categories': ['marriage','spirituality'], 'planets': ['Venus'], 'signs': [], 'houses': [7],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':7}]},
+    {'text': 'D-10 Dashamsha Chart (Career, Status, and Public Achievement): The quality and placement of the 10th lord and Sun in D-10 reveal the domain and height of career achievement. The Sun in D-10 indicates government, authority, and public roles; Saturn in D-10 indicates systematic, long-term organizational careers; Mercury in D-10 indicates intellectual or commercial achievement; Jupiter in D-10 indicates law, teaching, or spiritual leadership. Planets in kendra in D-10 confirm prominent career outcomes.',
+     'score': 9, 'categories': ['career'], 'planets': ['Sun'], 'signs': [], 'houses': [10],
+     'formulas': [{'type':'planet_in_house','planet':'Sun','house':10}]},
+    {'text': 'D-12 Dwadashamsha Chart (Parental Blessings and Ancestral Karma): The condition of the Sun and 9th lord in D-12 shows paternal blessings and father\'s social status. The condition of the Moon and 4th lord in D-12 shows maternal blessings, mother\'s wellbeing, and quality of emotional nurturing received in childhood. Jupiter in D-12 indicates wise, educated parents of higher social standing.',
+     'score': 7, 'categories': ['spirituality'], 'planets': ['Jupiter'], 'signs': [], 'houses': [9],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':9}]},
+    {'text': 'D-16 Shodashamsha Chart (Vehicles and Domestic Comforts): Venus in its own sign or exaltation in D-16 gives luxury vehicles and fine domestic comforts. Saturn in D-16 indicates practical, durable but austere vehicles. The D-16 reflects both physical transport and the general quality of sensory comforts in life.',
+     'score': 6, 'categories': ['property','wealth'], 'planets': ['Venus'], 'signs': ['Taurus','Libra','Pisces'], 'houses': [],
+     'formulas': [{'type':'planet_in_sign','planet':'Venus','sign':'Taurus'}]},
+    {'text': 'D-20 Vimshamsha Chart (Spiritual Practice and Liberation): A strong 9th or 12th house in D-20, especially occupied by Jupiter, Saturn, or Ketu, indicates significant spiritual progress in this lifetime. Ketu in D-20 Lagna or 12th house is the most powerful indicator that the soul is approaching moksha — liberation from the cycle of rebirth.',
+     'score': 8, 'categories': ['spirituality'], 'planets': ['Ketu','Jupiter'], 'signs': [], 'houses': [9,12],
+     'formulas': [{'type':'planet_in_house','planet':'Ketu','house':12}]},
+    {'text': 'D-24 Chaturvimshamsha Chart (Education and Learning): A strong 5th lord and Mercury in D-24 indicate the level and quality of formal education. Jupiter in D-24 kendra confirms higher education, multiple degrees, or scholarly distinction. Mercury in its own sign in D-24 shows a natural scholar. This chart is studied for academic success and the depth of intellectual cultivation.',
+     'score': 7, 'categories': ['education'], 'planets': ['Mercury','Jupiter'], 'signs': [], 'houses': [5],
+     'formulas': [{'type':'planet_in_house','planet':'Mercury','house':5}]},
+    {'text': 'D-30 Trimshamsha Chart (Evils, Health, and Karmic Challenges): Malefics in the D-30 Lagna or its lord in dusthana indicate significant health challenges, accidents, or karmic burdens in the life. Benefics in D-30 provide protection and spiritual resilience against these challenges. This chart is consulted when assessing serious health challenges, accidents, or karmic burdens.',
+     'score': 7, 'categories': ['health'], 'planets': ['Saturn'], 'signs': [], 'houses': [1,6,8,12],
+     'formulas': [{'type':'planet_in_house','planet':'Saturn','house':6}]},
+    {'text': 'D-60 Shastiamsha (Karmic Soul Quality): The most microscopic divisional chart, D-60 reveals the soul\'s karmic quality at a highly refined level. Benefic D-60 positions indicate auspicious past-life karma; malefic positions reveal karmic debts requiring resolution in this life. Parashara prescribed this chart primarily for timing through dasha to verify the quality of each planetary period.',
+     'score': 8, 'categories': ['spirituality'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+
+    # ══ M.N. KEDAR — DELINEATION & DYNAMIC CONFIGURATION ═════════════════════
+    {'text': 'Nakshatra-Lord Inheritance Principle (Kedar): A planet positioned in a nakshatra inherits the qualities and responsibilities of the nakshatra lord, and the effect is further coloured by the sign containing that nakshatra. For example, Mars in Ardra nakshatra (Rahu-ruled, in Mercury\'s sign Gemini) takes on Rahu\'s amplified, unconventional quality expressed through Gemini\'s intellectual domain — creating bold, unconventional communication and thinking.',
+     'score': 9, 'categories': ['nakshatra'], 'planets': ['Mars'], 'signs': ['Gemini'], 'houses': [],
+     'formulas': [{'type':'planet_in_sign','planet':'Mars','sign':'Gemini'}]},
+    {'text': 'PAC Principle (Position, Aspect, Conjunction — Kedar): All astrological analysis must consider three types of planetary connections: Position (a planet directly placed in a house), Aspect (a planet casting its glance on a house), and Conjunction (planets occupying the same house). A planet with all three types of PAC connections to a key house makes that house a central, dominant theme of the life. Any prediction must reference at least one PAC connection for reliability.',
+     'score': 9, 'categories': ['yoga'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Avastha (Planetary Maturity States) — Kedar: Planets have five avasthas based on degree within a sign: Bala (0-6°, infant — immature results, slow to manifest), Kumara (6-12°, youth — developing, partial results), Yuva (12-18°, mature adult — full strength, optimal manifestation), Vriddha (18-24°, old — declining, results waning), Mrita (24-30°, dead — dormant, results severely delayed or denied). A vargottama planet in Bala avastha needs careful interpretation — strong positionally but immature in delivery.',
+     'score': 9, 'categories': ['dignity'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Vargottama Strength (Kedar & Krishna Kumar): A planet is Vargottama when it occupies the same sign in the birth chart (D-1) and the Navamsha (D-9). This creates a doubled, stable, anchored expression of the planet\'s nature. Vargottama planets are treated as exceptionally strong — even a debilitated planet that is vargottama gains considerable strength and delivers its results with unusual stability and predictability across all life areas it governs.',
+     'score': 10, 'categories': ['dignity'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Rashi Sandhi Warning (Kedar): A planet placed in the last degree of a sign (especially 29°-30°) is in Rashi Sandhi — it stands at the junction of two signs and its energy is split and confused. Such a planet cannot deliver its significations clearly. Results of Rashi Sandhi planets are erratic, delayed, or expressed with unusual ambiguity. This vulnerability intensifies during that planet\'s own dasha period.',
+     'score': 8, 'categories': ['dignity'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Nakshatra-lord chain: Moon in Jupiter\'s nakshatra (Punarvasu, Vishakha, or Purva Bhadrapada) inherits Jupiter\'s expansive, philosophical wisdom. The mind (Moon) naturally inclines toward dharma, higher learning, and optimistic world-view. This person finds emotional peace through study, teaching, and spiritual understanding, and typically attracts Guru-figures as key life-shapers.',
+     'score': 8, 'categories': ['nakshatra','spirituality'], 'planets': ['Moon','Jupiter'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Moon','planet2':'Jupiter'}]},
+    {'text': 'Nakshatra-lord chain: Moon in Saturn\'s nakshatra (Pushya, Anuradha, or Uttara Bhadrapada) gives the mind a Saturnine discipline, emotional depth, and capacity to endure hardship with equanimity. This person finds emotional security through structure, responsibility, and long-term commitments rather than immediate pleasures.',
+     'score': 7, 'categories': ['nakshatra'], 'planets': ['Moon','Saturn'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Moon','planet2':'Saturn'}]},
+    {'text': 'Nakshatra-lord chain: Mars in Rahu\'s nakshatra (Ardra, Swati, or Shatabhisha) amplifies Mars\'s already dynamic energy with Rahu\'s expansive obsession and unconventional drive. The native is bold, technically oriented, fascinated by cutting-edge fields, and driven by an intense, almost compulsive need to achieve and conquer. Foreign environments and technology amplify this energy.',
+     'score': 8, 'categories': ['nakshatra','career'], 'planets': ['Mars','Rahu'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Mars','planet2':'Rahu'}]},
+    {'text': 'Nakshatra-lord chain: Jupiter in Venus\'s nakshatra (Bharani, Purva Phalguni, or Purva Ashadha) blends Jupiter\'s wisdom and expansion with Venus\'s love of beauty and refined pleasure. This creates a person whose philosophy is expressed through beauty, art, and relationship — a natural teacher of aesthetics, law of attraction, and harmonious social principles.',
+     'score': 8, 'categories': ['nakshatra','spirituality'], 'planets': ['Jupiter','Venus'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Jupiter','planet2':'Venus'}]},
+    {'text': 'Nakshatra-lord chain: Sun in Rahu\'s nakshatra (Ardra, Swati, or Shatabhisha) creates an unconventional solar expression — the native\'s identity (Sun) is shaped by Rahu\'s desire to break conventions, achieve through unusual means, and connect to foreign or technological realms. Authority is sought through innovation rather than tradition.',
+     'score': 7, 'categories': ['nakshatra'], 'planets': ['Sun','Rahu'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Sun','planet2':'Rahu'}]},
+    {'text': 'Dynamic Configuration Principle (Kedar): For accurate prediction, the planets and houses in the birth chart must be cross-referenced with the relevant divisional chart AND the current Vimshottari Dasha lord. Only when all three layers confirm an event — birth chart, divisional chart, and dasha — should a prediction be considered reliable. A promise in the birth chart can only fructify during the appropriate dasha period.',
+     'score': 10, 'categories': ['dasha'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+
+    # ══ N.N. SHARMA — INTERPRETING DIVISIONAL CHARTS (K.N. Rao School) ════════
+    {'text': 'Three-Point Verification Principle (K.N. Rao via N.N. Sharma): Every reliable astrological prediction must be confirmed by at least three houses, three planets, and two divisional charts working in unison. Single-planet or single-house analysis is insufficient for accurate prediction. Collective confirmation across multiple chart layers raises prediction accuracy dramatically — from ~65% to ~90%.',
+     'score': 10, 'categories': ['yoga'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Divisional Charts as Microscopic Life Lenses (N.N. Sharma): Each divisional chart provides a microscopic, high-resolution view of a specific facet of life. The birth chart gives the overall picture; divisional charts zoom into one specific dimension — marriage, career, children, education, spirituality — with extraordinary precision. Ignoring divisional charts produces only surface-level predictions.',
+     'score': 9, 'categories': ['yoga'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Navamsha — The Soul\'s Second Body (N.N. Sharma & K.N. Rao): The Navamsha chart is the soul\'s inner chart. The birth chart shows external circumstances; the Navamsha reveals the inner quality, spiritual depth, and ultimate direction of life. For marriage specifically, the Navamsha confirms not just whether marriage occurs, but the quality of the inner bond — whether it deepens the soul or creates spiritual dissonance.',
+     'score': 10, 'categories': ['marriage','spirituality'], 'planets': ['Venus'], 'signs': [], 'houses': [7],
+     'formulas': [{'type':'planet_in_house','planet':'Venus','house':7}]},
+    {'text': 'Prarabdha and Planetary Dasha (N.N. Sharma): The birth chart contains both positive and negative promises (yogas and doshas). These promises can only fructify when the appropriate Vimshottari dasha lord activates them. A native with a powerful Raja Yoga may spend years in ordinary circumstances if their dasha sequence does not activate the yoga at the right age. The Dasha sequence determines WHEN karma manifests, not whether it exists.',
+     'score': 10, 'categories': ['dasha'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+    {'text': 'Sookhsham Chart Principle (N.N. Sharma): For extreme precision in timing — especially when two charts appear nearly identical (as with twins born minutes apart) — the Sookhsham (ultra-micro) divisional charts reveal the finest karmic distinctions. The same birth chart with a different dasha sequence produces a different life; combined with different Sookhsham positions, the destinies diverge completely, confirming karma\'s precision at the moment of birth.',
+     'score': 8, 'categories': ['dasha'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': []},
+
+    # ══ ADDITIONAL CLASSICAL YOGAS (Parashari & Saravali traditions) ════════
+    {'text': 'Neecha Bhanga Raja Yoga: When a planet is debilitated (neecha), if the lord of the sign of debilitation or the lord of the sign of exaltation of the debilitated planet is in a kendra from Lagna or from the Moon, the debilitation is cancelled. This cancellation transforms the weakness into exceptional strength — producing outstanding results in the area the planet governs, typically in the second half of life after initial struggle.',
+     'score': 10, 'categories': ['yoga','dignity'], 'planets': [], 'signs': [], 'houses': [1,4,7,10],
+     'formulas': [{'type':'special_house_type','planet':'Moon','house_type':'kendra'}]},
+    {'text': 'Viparita Raja Yoga: When the lord of the 6th, 8th, or 12th house is placed in any other dusthana (6th, 8th, or 12th), and is not conjunct or aspected by benefics, this forms the Viparita Raja Yoga — one of the most surprising and powerful yogas. It produces unexpected, sudden rise in status, wealth, or power — often through the misfortune or downfall of adversaries. Results come through apparent loss or adversity.',
+     'score': 10, 'categories': ['yoga','wealth','career'], 'planets': [], 'signs': [], 'houses': [6,8,12],
+     'formulas': [{'type':'special_house_type','planet':'Saturn','house_type':'dusthana'}]},
+    {'text': 'Chandra-Mangala Yoga: When the Moon and Mars are in conjunction, mutual aspect, or exchange of signs, this Chandra-Mangala Yoga forms. The combination of emotional drive (Moon) and physical initiative (Mars) produces exceptional wealth-generating capacity, strong determination, and the ability to convert emotional momentum into tangible achievement. Business and trade ventures especially benefit.',
+     'score': 8, 'categories': ['yoga','wealth'], 'planets': ['Moon','Mars'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'conjunction','planet1':'Moon','planet2':'Mars'}]},
+    {'text': 'Adhi Yoga: When benefic planets (Mercury, Venus, Jupiter) occupy the 6th, 7th, and 8th houses from the Moon in any combination, Adhi Yoga forms. This gives the native the qualities of a minister, commander, or highly influential public figure — physical wellbeing, wealth, fame, and the capacity to lead and inspire others. Even partial formation (two of three) grants significant elevation.',
+     'score': 9, 'categories': ['yoga','career','wealth'], 'planets': ['Mercury','Venus','Jupiter'], 'signs': [], 'houses': [6,7,8],
+     'formulas': [{'type':'planet_in_house','planet':'Jupiter','house':6}]},
+    {'text': 'Kahala Yoga: When the lords of the 4th and 9th houses are in mutual kendra positions (quadrant to each other), and the Lagna lord is strong, Kahala Yoga forms. This produces a fearless, persistent, tenacious character with extraordinary determination. The native is stubborn in the best sense — unwilling to be moved by opposition or adversity.',
+     'score': 8, 'categories': ['yoga','career'], 'planets': [], 'signs': [], 'houses': [4,9],
+     'formulas': [{'type':'lord_transfer','from_house':4,'to_house':10}]},
+    {'text': 'Saraswati Yoga: When Mercury, Jupiter, and Venus are placed in kendras, trikonas, or the 2nd house from Lagna, Saraswati Yoga forms. This grants exceptional intellectual brilliance, artistic genius, command of multiple disciplines, and recognition as a scholar, artist, or person of extraordinary refinement and creative talent. The native becomes an authority in their chosen intellectual or artistic domain.',
+     'score': 9, 'categories': ['yoga','education','creativity'], 'planets': ['Mercury','Jupiter','Venus'], 'signs': [], 'houses': [1,2,4,5,7,9,10],
+     'formulas': [{'type':'conjunction','planet1':'Jupiter','planet2':'Mercury'}]},
+    {'text': 'Lakshmi Yoga: When the Lagna lord is in its own sign or exaltation in a kendra, and the 9th lord is also in its own sign or exaltation in a kendra or trikona, Lakshmi Yoga forms. This is the yoga of Goddess Lakshmi — indicating exceptional wealth, luxurious living, a virtuous character, and a life marked by beauty, prosperity, and public respect. Marriage and family life are especially blessed.',
+     'score': 10, 'categories': ['yoga','wealth'], 'planets': [], 'signs': [], 'houses': [1,9],
+     'formulas': [{'type':'lord_transfer','from_house':9,'to_house':1}]},
+    {'text': 'Kesari Yoga (Gajakesari variant): Jupiter placed in a kendra from the Moon sign creates this foundational prosperity yoga. The native has excellent judgment, emotional wisdom, generosity of spirit, and natural authority. Fame comes to the native organically, and the life is remembered with dignity. Financial stability and social respect are the hallmarks.',
+     'score': 9, 'categories': ['yoga','wealth','social'], 'planets': ['Jupiter','Moon'], 'signs': [], 'houses': [],
+     'formulas': [{'type':'special_house_type','planet':'Jupiter','house_type':'kendra'}]},
+    {'text': 'Dhana Yogas through 5th and 9th lords: When the 5th lord and 9th lord combine by conjunction, aspect, or exchange — together with the 2nd and 11th lords — an exceptionally powerful wealth yoga forms that brings multiple income streams, accumulated assets, and financial fortune across the entire lifetime. Activation occurs during the dasha of any of these lords.',
+     'score': 9, 'categories': ['yoga','wealth'], 'planets': [], 'signs': [], 'houses': [5,9,2,11],
+     'formulas': [{'type':'lord_transfer','from_house':5,'to_house':9}]},
+    {'text': 'Partial Pancha Mahapurusha Yoga: When a planet occupies its own or exaltation sign but in a neutral house (not a kendra), the Pancha Mahapurusha Yoga is partially formed. The native enjoys the quality of that planet\'s highest expression in personal character, but the public recognition associated with the full yoga (kendra placement) is diminished. The planet\'s dasha still delivers exceptional personal results.',
+     'score': 7, 'categories': ['yoga'], 'planets': [], 'signs': [], 'houses': [1,4,7,10],
+     'formulas': [{'type':'special_house_type','planet':'Jupiter','house_type':'kendra'}]},
+    {'text': 'Lord of 1st, 5th, and 9th united (Triple Trikona Raja Yoga): When the lords of the 1st, 5th, and 9th houses form any combination — conjunction, aspect, or exchange — an extraordinarily powerful Raja Yoga results. All three trikonas unite, creating a life that is genuinely blessed across all domains: health, intelligence, wealth, dharma, and spiritual liberation.',
+     'score': 10, 'categories': ['yoga','wealth','spirituality'], 'planets': [], 'signs': [], 'houses': [1,5,9],
+     'formulas': [{'type':'lord_transfer','from_house':1,'to_house':5}]},
+    {'text': 'House Lord in Own House (Swakshetra Bhava): Any house whose lord sits in that very same house creates a self-powered, self-sufficient energy in that life domain. The lord sitting in its own house does not depend on external support — it generates results from its own strength. This placement is especially powerful for the 1st, 7th, 10th, and 9th houses, creating strong independent identity, marriage, career, and fortune respectively.',
+     'score': 9, 'categories': ['house_lord'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': [{'type':'lord_transfer','from_house':7,'to_house':7}]},
+    {'text': 'Exchange of Lords (Parivartana Yoga): When the lord of one house is placed in a second house, and the lord of that second house is placed back in the first house, they exchange signs — creating a Parivartana (mutual exchange) Yoga. This powerfully connects the two houses as though both lords were in each other\'s house simultaneously. Parivartana between angular and trine lords is among the most powerful of all yogas.',
+     'score': 10, 'categories': ['yoga'], 'planets': [], 'signs': [], 'houses': [],
+     'formulas': [{'type':'lord_transfer','from_house':1,'to_house':10}]},
 ]
+
+# ── Avastha & Vargottama helpers ─────────────────────────────────────────────
+def _avastha(lon_in_sign):
+    """Return the planetary maturity state (avastha) based on degree within sign."""
+    d = float(lon_in_sign)
+    if   d <  6: return ('Bala',    'infant — energy immature, results slow to manifest')
+    elif d < 12: return ('Kumara',  'youth — developing strength, partial results')
+    elif d < 18: return ('Yuva',    'adult — full strength, optimal manifestation')
+    elif d < 24: return ('Vriddha', 'aging — strength declining, results waning')
+    else:        return ('Mrita',   'dead — dormant energy, results severely delayed')
+
+def _navamsha_sign(rasi_idx, lon_in_sign):
+    """Calculate the Navamsha (D-9) sign index for a given rasi and degree within sign."""
+    # Start rasi of navamsha sequence per sign type:
+    # Movable (0,3,6,9=Aries,Cancer,Libra,Capricorn): start from Aries (0)
+    # Fixed   (1,4,7,10=Taurus,Leo,Scorpio,Aquarius): start from Capricorn (9)
+    # Dual    (2,5,8,11=Gemini,Virgo,Sagittarius,Pisces): start from Libra (6)
+    nav_start = {0:0,1:9,2:6, 3:0,4:9,5:6, 6:0,7:9,8:6, 9:0,10:9,11:6}
+    start      = nav_start.get(int(rasi_idx) % 12, 0)
+    nav_idx    = int(float(lon_in_sign) / (30.0 / 9.0)) % 9
+    return (start + nav_idx) % 12
+
+def _is_vargottama(rasi_idx, lon_in_sign):
+    """Return True if the planet is Vargottama (same sign in D-1 and D-9)."""
+    return _navamsha_sign(rasi_idx, lon_in_sign) == (int(rasi_idx) % 12)
 
 # ── helper utilities ────────────────────────────────────────────────────────
 def safe_float(value, default=0.0):
@@ -724,6 +1116,12 @@ def get_planet_positions(jd, place):
                   'dusthana' if house in DUSTHANA_HOUSES else
                   'upachaya' if house in UPACHAYA_HOUSES else 'neutral')
 
+        lon_float    = safe_float(lon_in_rasi)
+        av_name, av_desc = _avastha(lon_float)
+        vargottama   = _is_vargottama(rasi_int, lon_float) if p_name not in ('Lagna',) else False
+        d9_sign_idx  = _navamsha_sign(rasi_int, lon_float)
+        d9_sign      = RASI_NAMES[d9_sign_idx] if p_name != 'Lagna' else sign
+
         positions.append({
             'id':          p_id,
             'name':        p_name,
@@ -736,8 +1134,12 @@ def get_planet_positions(jd, place):
             'nakshatra':   NAKSHATRA_NAMES[nak_idx],
             'nak_pada':    nak_pada,
             'nak_lord':    NAKSHATRA_LORDS[nak_idx],
-            'lon_in_sign': round(safe_float(lon_in_rasi), 4),
+            'lon_in_sign': round(lon_float, 4),
             'longitude':   round(abs_lon, 4),
+            'avastha':     av_name,
+            'avastha_desc':av_desc,
+            'vargottama':  vargottama,
+            'd9_sign':     d9_sign,
         })
     return positions
 
@@ -1273,9 +1675,16 @@ def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None
             'neutral':  'Neutral',
         }.get(p['house_type'], p['house_type'].title())
         d_icon = {'exalted':'⬆','debilitated':'⬇','moolatrikona':'★','own':'◆','neutral':'·'}.get(p['dignity'],'·')
+        # Append Avastha and Vargottama data to the planet text
+        av_tag = p.get('avastha','')
+        vargo  = p.get('vargottama', False)
+        d9_s   = p.get('d9_sign', '')
+        av_colors = {'Bala':'⚪','Kumara':'🟡','Yuva':'🟢','Vriddha':'🟠','Mrita':'🔴'}
+        av_note = f" | Avastha: {av_colors.get(av_tag,'')}{av_tag} ({p.get('avastha_desc','')})"
+        vargo_note = f" | ✨ VARGOTTAMA (D-9 also {d9_s} — doubly strong, exceptional stability)" if vargo else f" | D-9: {d9_s}"
         paras.append({
             'title':    f"{pname} in {p['sign']} · H{p['house']} ({h_type_lbl}) {d_icon}",
-            'text':     text,
+            'text':     text + av_note + vargo_note,
             'category': 'planet',
             'icon':     d_icon,
             'meta': {
@@ -1285,6 +1694,9 @@ def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None
                 'dignity':    p['dignity'],
                 'house_type': p['house_type'],
                 'nakshatra':  p['nakshatra'],
+                'avastha':    av_tag,
+                'vargottama': vargo,
+                'd9_sign':    d9_s,
             },
         })
 
@@ -1431,28 +1843,175 @@ def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None
     # ── 8. CLASSICAL TEXT MATCHES ────────────────────────────────────────────
     if matched_rules:
         formula_matched = [r for r in matched_rules if r.get('formula_hits', 0) > 0]
-        for rule in formula_matched[:5]:
+        for rule in formula_matched[:6]:
             cats = rule.get('categories', ['general'])
+            src  = 'Built-in Classical Rule' if rule.get('builtin') else 'Uploaded Book Rule'
             paras.append({
-                'title':    f"Classical Text ({cats[0].title()}): Verified Rule",
+                'title':    f"📖 {src} ({cats[0].title()}): Verified Against Your Chart",
                 'text':     (
                     f"\"{rule['text']}\" "
                     f"[Formula-verified: {rule['formula_hits']}/{rule['formula_count']} formulas "
-                    f"match this chart. Relevance score: {rule['chart_relevance']}]"
+                    f"match this chart — Relevance score: {rule['chart_relevance']}]"
                 ),
                 'category': 'classical',
                 'icon':     '📖',
             })
-        if len(matched_rules) > 5:
+        if len(matched_rules) > 6:
             paras.append({
-                'title':    f"{len(matched_rules)} Total Classical Rules Matched",
+                'title':    f"📚 {len(matched_rules)} Total Classical Rules Matched",
                 'text':     (
-                    f"{len(formula_matched)} are formula-verified against your actual chart positions. "
+                    f"{len(formula_matched)} are formula-verified against your actual planetary positions. "
+                    f"Sources include built-in Parashari rules, V.P. Goel's Divisional Charts, "
+                    f"Krishna Kumar's Secret of Vargas, M.N. Kedar's Delineation methodology, "
+                    f"and N.N. Sharma's Divisional Chart research (K.N. Rao school). "
                     f"Browse all matched rules in the Rule Library for complete classical backing."
                 ),
                 'category': 'classical',
                 'icon':     '📚',
             })
+
+    # ── 9. VARGOTTAMA & AVASTHA — Microscopic Planetary Strength Analysis ────
+    vargo_planets = [p for p in positions if p.get('vargottama') and p['name'] != 'Lagna']
+    if vargo_planets:
+        vargo_texts = []
+        for p in vargo_planets:
+            ruled = [h for h in range(1,13)
+                     if SIGN_LORDS.get(RASI_SIGNS[(lagna_rasi+h-1)%12]) == p['name']]
+            ruled_sigs = [HOUSE_KARKA.get(h,'').split(',')[0] for h in ruled]
+            sigs_txt = ' and '.join(ruled_sigs) if ruled_sigs else PLANET_KARAKAS.get(p['name'],'').split(',')[0]
+            vargo_texts.append(
+                f"**{p['name']} is Vargottama** — in {p['sign']} in both your birth chart and Navamsha (D-9). "
+                f"This is the rarest strength-multiplier in Jyotish: the planet's energy is anchored, "
+                f"doubled, and exceptionally stable. {p['name']}'s significations — {sigs_txt} — "
+                f"deliver their results with unusual consistency and depth across all life periods, not just during the Mahadasha."
+            )
+        paras.append({
+            'title':    f"✨ Vargottama Planets: {', '.join(p['name'] for p in vargo_planets)} — Doubly Anchored Strength",
+            'text':     ' | '.join(vargo_texts),
+            'category': 'dignity',
+            'icon':     '✨',
+        })
+
+    # ── 10. AVASTHA MATRIX — Planetary Maturity States (Kedar) ──────────────
+    real_planets = [p for p in positions if p['name'] not in ('Lagna',) and p['name'] in
+                    ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu']]
+    av_groups = {'Yuva':[], 'Kumara':[], 'Vriddha':[], 'Bala':[], 'Mrita':[]}
+    for p in real_planets:
+        av = p.get('avastha','Yuva')
+        if av in av_groups: av_groups[av].append(p['name'])
+    av_text_parts = []
+    av_icons = {'Yuva':'🟢','Kumara':'🟡','Bala':'⚪','Vriddha':'🟠','Mrita':'🔴'}
+    av_intros = {
+        'Yuva':    'at full maturity, delivering peak, optimal results right now',
+        'Kumara':  'in developing youth, delivering partial results with growing strength',
+        'Bala':    'in infant state, immature — results will come slowly; patience required',
+        'Vriddha': 'in aging state, results declining — past-life gifts fading, effort needed',
+        'Mrita':   'in dormant state — severely restricted; gemstone/mantra remediation advised',
+    }
+    for av_state in ['Yuva','Kumara','Vriddha','Bala','Mrita']:
+        pls = av_groups[av_state]
+        if pls:
+            av_text_parts.append(f"{av_icons[av_state]} **{av_state}** ({av_intros[av_state]}): {', '.join(pls)}")
+    paras.append({
+        'title':    'Avastha Matrix — Planetary Maturity States (Kedar Methodology)',
+        'text':     (
+            'Based on each planet\'s degree within its sign, their current strength-state (avastha) is: '
+            + ' | '.join(av_text_parts)
+            + '. Note: Avastha applies to the dasha results — even a well-placed planet in Mrita avastha delivers muted results during its Mahadasha unless remediated.'
+        ),
+        'category': 'dignity',
+        'icon':     '⚖',
+    })
+
+    # ── 11. NAKSHATRA-LORD INHERITANCE CHAIN ─────────────────────────────────
+    nak_chain_parts = []
+    for p in real_planets:
+        nak_lord = p.get('nak_lord', '')
+        if not nak_lord or nak_lord == p['name']: continue
+        nak_lord_p = next((x for x in positions if x['name'] == nak_lord), None)
+        nak_lord_house = nak_lord_p['house'] if nak_lord_p else '?'
+        nak_lord_sign  = nak_lord_p['sign']  if nak_lord_p else '?'
+        nak_lord_dig   = nak_lord_p.get('dignity','neutral') if nak_lord_p else 'neutral'
+        dig_note = {'exalted':' (exalted — strongly positive)',' debilitated':' (debilitated — weakened)'}.get(nak_lord_dig,'')
+        karaka_chain = PLANET_KARAKAS.get(nak_lord,'').split(',')[0]
+        nak_chain_parts.append(
+            f"**{p['name']}** in {p['nakshatra']} (lord: {nak_lord}) — "
+            f"{p['name']} inherits {nak_lord}'s qualities ({karaka_chain}). "
+            f"{nak_lord} sits in H{nak_lord_house} ({nak_lord_sign}{dig_note}), "
+            f"so {p['name']}'s expression is filtered through {nak_lord}'s house-{nak_lord_house} agenda"
+        )
+    if nak_chain_parts:
+        paras.append({
+            'title':    'Nakshatra-Lord Inheritance Chain (M.N. Kedar Methodology)',
+            'text':     (
+                'Each planet in your chart operates through the filter of its nakshatra lord '
+                '(the ruler of the star-division it occupies). This "inheritance" shapes HOW the planet '
+                'expresses itself — far beyond mere sign placement: '
+                + '; '.join(nak_chain_parts[:6])
+            ),
+            'category': 'nakshatra',
+            'icon':     '🌟',
+        })
+
+    # ── 12. DIVISIONAL CHART GUIDANCE (V.P. Goel + Krishna Kumar) ───────────
+    paras.append({
+        'title':    'Divisional Chart Reading Map (V.P. Goel + Krishna Kumar)',
+        'text':     (
+            'To complete this analysis with surgical precision, cross-reference these divisional charts: '
+            '**D-9 (Navamsha)**: Confirm marriage quality — examine 7th lord and Venus in D-9; '
+            'any Vargottama planet is anchored here and delivers exceptional results. '
+            '**D-10 (Dashamsha)**: Career domain and peak — check Sun, 10th lord, and their dignity in D-10. '
+            '**D-7 (Saptamsha)**: Children\'s quality and timing — Jupiter\'s condition in D-7 is paramount. '
+            '**D-12 (Dwadashamsha)**: Parental blessings — Sun (9th lord in D-12) for father; Moon (4th lord in D-12) for mother. '
+            '**D-4 (Chaturthamsha)**: Property and domestic fortune — 4th lord\'s D-4 position confirms or denies real estate gains. '
+            '**D-20 (Vimshamsha)**: Spiritual progress — Ketu and 9th/12th lords in D-20 for liberation potential. '
+            'Per K.N. Rao\'s three-point rule: confirm every major prediction with 3 houses + 3 planets + 2 divisional charts before stating it as certain.'
+        ),
+        'category': 'classical',
+        'icon':     '📊',
+    })
+
+    # ── 13. PAC SYNTHESIS — Most Powerfully Connected Planets ───────────────
+    p_house_map = {p['name']: p['house'] for p in positions if p['name'] != 'Lagna'}
+    pac_scores = {}
+    for p in real_planets:
+        score = 0
+        # Position connections (planets sharing the same house)
+        conjuncts = [q for q in real_planets if q['name'] != p['name'] and q['house'] == p['house']]
+        score += len(conjuncts) * 2
+        # Aspect connections
+        asp7 = ((p['house'] - 1 + 6) % 12) + 1
+        asp_other = [((p['house'] - 1 + s - 1) % 12) + 1 for s in SPECIAL_ASPECTS.get(p['name'], [])]
+        asp_planets = [q for q in real_planets
+                       if q['name'] != p['name'] and q['house'] in ([asp7] + asp_other)]
+        score += len(asp_planets)
+        # Rulership connections (ruling key houses)
+        ruled = [h for h in range(1,13)
+                 if SIGN_LORDS.get(RASI_SIGNS[(lagna_rasi+h-1)%12]) == p['name']]
+        score += len([h for h in ruled if h in KENDRA_HOUSES | TRIKONA_HOUSES]) * 3
+        pac_scores[p['name']] = score
+    top_pac = sorted(pac_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+    if top_pac:
+        pac_desc = []
+        for pname, sc in top_pac:
+            p = next((x for x in positions if x['name'] == pname), None)
+            if p:
+                pac_desc.append(
+                    f"**{pname}** (PAC score {sc}) in H{p['house']} ({p['sign']}) — "
+                    f"the most multidimensionally connected planet, making it a dominant life-shaper"
+                )
+        paras.append({
+            'title':    'PAC Analysis — Most Powerfully Connected Planets (Kedar Methodology)',
+            'text':     (
+                'PAC (Position, Aspect, Conjunction) analysis identifies which planets have the most '
+                'connections across your chart — these are the true engines of your fate: '
+                + '; '.join(pac_desc)
+                + '. These planets\' Mahadasha periods are the most transformative and important periods '
+                'of your life. Strengthen them proactively.'
+            ),
+            'category': 'yoga',
+            'icon':     '🔗',
+        })
 
     return paras
 
