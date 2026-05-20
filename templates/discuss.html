@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block title %}Life Discussion — Vedic Astrology{% endblock %}
+{% block extra_head %}
+<style>
+.discuss-layout{display:grid;grid-template-columns:320px 1fr;gap:1.2rem;align-items:start;height:calc(100vh - 120px)}
+@media(max-width:900px){.discuss-layout{grid-template-columns:1fr;height:auto}}
+
+/* ── Sidebar ── */
+.sidebar{display:flex;flex-direction:column;gap:.8rem;position:sticky;top:80px;max-height:calc(100vh-120px);overflow-y:auto}
+
+/* ── Chat area ── */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 120px);min-height:500px}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.8rem;background:var(--bg);border:1px solid var(--border);border-radius:.75rem .75rem 0 0}
+.msg{max-width:85%;border-radius:.75rem;padding:.7rem 1rem;font-size:.85rem;line-height:1.7}
+.msg-user{align-self:flex-end;background:var(--accent2);color:#fff;border-radius:.75rem .75rem 0 .75rem}
+.msg-bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:.75rem .75rem .75rem 0;max-width:95%}
+.msg-bot h3{color:var(--accent);font-size:.88rem;margin:0.5rem 0 .2rem;border-bottom:1px solid var(--border);padding-bottom:.2rem}
+.msg-bot blockquote{border-left:3px solid var(--accent2);padding-left:.7rem;margin:.4rem 0;color:var(--muted);font-style:italic;font-size:.8rem}
+.msg-bot strong{color:var(--accent3)}
+.msg-bot ul{padding-left:1.2rem;margin:.3rem 0}
+.msg-bot li{margin-bottom:.2rem}
+.msg-bot hr{border:none;border-top:1px solid var(--border);margin:.6rem 0}
+.msg-typing{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:.6rem 1rem;font-size:.85rem;color:var(--muted)}
+
+/* ── Chat input ── */
+.chat-input-row{display:flex;gap:.5rem;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 .75rem .75rem;padding:.6rem}
+.chat-input-row textarea{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:.5rem .8rem;border-radius:.4rem;font-size:.85rem;resize:none;height:44px;max-height:120px;overflow-y:auto;line-height:1.5;font-family:inherit}
+.chat-input-row textarea:focus{outline:none;border-color:var(--accent2)}
+
+/* ── Quick chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
+.chip{padding:.25rem .7rem;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer;font-size:.75rem;transition:all .15s}
+.chip:hover,.chip.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+
+/* ── Relevant planets strip ── */
+.planets-strip{display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem 0}
+.planet-pill{padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;border:1px solid}
+.dignity-exalted{background:#22c55e22;color:#22c55e;border-color:#22c55e44}
+.dignity-debilitated{background:#ef444422;color:#ef4444;border-color:#ef444444}
+.dignity-own,.dignity-moolatrikona{background:#06b6d422;color:#06b6d4;border-color:#06b6d444}
+.dignity-neutral{background:#9090b022;color:#9090b0;border-color:#9090b044}
+
+/* ── Rule cards ── */
+.rule-mini{background:#11112a;border:1px solid var(--border);border-radius:.4rem;padding:.5rem .7rem;font-size:.78rem;margin-top:.3rem}
+.rule-mini .rule-text{color:var(--text);line-height:1.5}
+.rule-mini .rule-meta{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+
+/* ── Status dot ── */
+.status-dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--ok);display:inline-block;margin-right:.3rem}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>💬 Life Discussion</h1>
+<p style="color:var(--muted);margin-bottom:1rem;font-size:.88rem">
+  Ask about any area of your life. The engine reads your chart positions, traces cause-and-effect relationships, and draws on your uploaded classical books to give personalised, grounded answers.
+</p>
+
+<div class="discuss-layout">
+  <!-- ── LEFT: Birth form + context ── -->
+  <div class="sidebar">
+    <div class="card">
+      <h3 style="margin-bottom:.8rem">Birth Details</h3>
+      <div class="form-group"><label>Year</label><input type="number" id="dy" value="1990"></div>
+      <div class="form-group"><label>Month</label><input type="number" id="dm" value="1" min="1" max="12"></div>
+      <div class="form-group"><label>Day</label><input type="number" id="dd" value="1" min="1" max="31"></div>
+      <div class="form-group"><label>Hour (0–23)</label><input type="number" id="dhr" value="6" min="0" max="23"></div>
+      <div class="form-group"><label>Minute</label><input type="number" id="dmin" value="0" min="0" max="59"></div>
+      <div class="form-group"><label>Latitude</label><input type="number" id="dlat" value="13.0827" step="0.0001"></div>
+      <div class="form-group"><label>Longitude</label><input type="number" id="dlon" value="80.2707" step="0.0001"></div>
+      <div class="form-group"><label>Timezone offset</label><input type="number" id="dtz" value="5.5" step="0.5"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="loadChart()">Load Chart</button>
+      <div id="chartStatus" style="font-size:.78rem;color:var(--muted);margin-top:.4rem;text-align:center"></div>
+    </div>
+
+    <div class="card" id="chartPanel" style="display:none">
+      <h3>Loaded Chart</h3>
+      <div id="lagnaInfo" style="font-size:.82rem;color:var(--accent);margin-bottom:.5rem"></div>
+      <div class="planets-strip" id="planetStrip"></div>
+    </div>
+
+    <div class="card">
+      <h3>Active Books</h3>
+      <div id="bookList" style="font-size:.78rem;color:var(--muted)">No books loaded yet.</div>
+      <a href="/pdf-toolkit" style="font-size:.75rem;color:var(--accent2);margin-top:.4rem;display:inline-block">+ Upload books in PDF Toolkit</a>
+    </div>
+
+    <div class="card">
+      <h3>Quick Topics</h3>
+      <div class="chips" id="quickChips"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Chat interface ── -->
+  <div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg msg-bot">
+        <strong>Welcome to Life Discussion</strong><br>
+        Load your chart using the birth details on the left, then ask me anything about your life — career, marriage, wealth, health, family, spirituality, or any specific concern.<br><br>
+        I will read your actual chart positions, trace the cause-and-effect relationships, and draw on classical Jyotish texts from your Rule Library to give you a personalised, grounded answer.
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="userInput" placeholder="Ask about career, marriage, wealth, health, children, travel..." onkeydown="handleKey(event)"></textarea>
+      <button class="btn btn-primary" onclick="sendMessage()" id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let chartId  = null;
+let planets  = [];
+let rajaYogas= [];
+let doshas   = {};
+let allBooks = [];
+
+const QUICK_TOPICS = [
+  'Tell me about my career',
+  'When will I get married?',
+  'What about my wealth and finances?',
+  'Tell me about my health',
+  'Will I have children?',
+  'Foreign travel or settlement?',
+  'What is my strongest planet?',
+  'Which areas of life are most challenging?',
+  'Tell me about my parents',
+  'What does my Lagna mean?',
+];
+
+function init() {
+  const chips = document.getElementById('quickChips');
+  QUICK_TOPICS.forEach(t => {
+    const c = document.createElement('button');
+    c.className = 'chip'; c.textContent = t;
+    c.onclick = () => { document.getElementById('userInput').value = t; sendMessage(); };
+    chips.appendChild(c);
+  });
+  loadBooks();
+}
+
+async function loadBooks() {
+  try {
+    const r = await fetch('/api/books');
+    const d = await r.json();
+    allBooks = d.books || [];
+    const el = document.getElementById('bookList');
+    if (allBooks.length === 0) {
+      el.textContent = 'No books loaded yet.';
+    } else {
+      el.innerHTML = allBooks.map(b =>
+        `<div style="margin-bottom:.3rem">📚 <strong>${b.filename}</strong> — ${b.rules} rules</div>`
+      ).join('');
+    }
+  } catch(e) {}
+}
+
+async function loadChart() {
+  const btn = document.querySelector('[onclick="loadChart()"]');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  document.getElementById('chartStatus').textContent = 'Calculating chart…';
+  try {
+    const payload = {
+      year: +document.getElementById('dy').value,
+      month: +document.getElementById('dm').value,
+      day: +document.getElementById('dd').value,
+      hour: +document.getElementById('dhr').value,
+      minute: +document.getElementById('dmin').value,
+      latitude: +document.getElementById('dlat').value,
+      longitude: +document.getElementById('dlon').value,
+      timezone: +document.getElementById('dtz').value,
+    };
+    const r = await fetch('/api/horoscope', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    chartId   = d.chart_id;
+    planets   = d.planets || [];
+    rajaYogas = d.raja_yogas || [];
+    doshas    = d.doshas || {};
+
+    const lagna = planets.find(p => p.name === 'Lagna');
+    document.getElementById('lagnaInfo').textContent =
+      lagna ? `${lagna.sign} Lagna at ${lagna.lon_in_sign.toFixed(2)}° — ${lagna.nakshatra} pada ${lagna.nak_pada}` : '';
+
+    const strip = document.getElementById('planetStrip');
+    strip.innerHTML = planets.filter(p => p.name !== 'Lagna').map(p =>
+      `<span class="planet-pill dignity-${p.dignity}" title="${p.sign} · H${p.house} · ${p.nakshatra}">`+
+      `${p.name} H${p.house}</span>`
+    ).join('');
+
+    document.getElementById('chartPanel').style.display = 'block';
+    document.getElementById('chartStatus').textContent = `✓ ${lagna ? lagna.sign : ''} Lagna loaded`;
+    document.getElementById('chartStatus').style.color = 'var(--ok)';
+
+    appendMsg('bot',
+      `✓ **Chart loaded** — ${lagna ? lagna.sign : ''} Ascendant, ${lagna ? lagna.nakshatra : ''} nakshatra.\n\nI now have your complete chart. Ask me about any area of your life and I will analyse it with cause-and-effect relationships from your actual planetary positions${allBooks.length > 0 ? ' and ' + allBooks.length + ' uploaded book(s)' : ''}.`
+    );
+  } catch(e) {
+    document.getElementById('chartStatus').textContent = '⚠ ' + e.message;
+    document.getElementById('chartStatus').style.color = 'var(--err)';
+  }
+  btn.disabled = false; btn.textContent = 'Load Chart';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  if (!chartId) {
+    appendMsg('bot', '⚠ Please load your chart first using the birth details on the left.');
+    return;
+  }
+  input.value = '';
+  appendMsg('user', text);
+
+  const typingEl = appendTyping();
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const r = await fetch('/api/discuss', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message: text,
+        chart_id: chartId,
+        book_ids: allBooks.map(b => b.book_id),
+      })
+    });
+    const d = await r.json();
+    typingEl.remove();
+    if (d.error) { appendMsg('bot', '⚠ ' + d.error); return; }
+    appendMsg('bot', d.response, d.relevant_planets, d.matched_rules);
+  } catch(e) {
+    typingEl.remove();
+    appendMsg('bot', '⚠ Connection error: ' + e.message);
+  }
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+function appendTyping() {
+  const el = document.createElement('div');
+  el.className = 'msg-typing';
+  el.innerHTML = '<span class="spinner"></span> Analysing your chart…';
+  document.getElementById('chatMessages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+  return el;
+}
+
+function appendMsg(role, text, relevant_planets, matched_rules) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg msg-${role === 'user' ? 'user' : 'bot'}`;
+
+  if (role === 'user') {
+    wrap.textContent = text;
+  } else {
+    let html = markdownToHtml(text);
+
+    // Relevant planets strip
+    if (relevant_planets && relevant_planets.length > 0) {
+      html += '<div class="planets-strip" style="margin-top:.6rem;border-top:1px solid var(--border);padding-top:.5rem">' +
+        '<span style="font-size:.72rem;color:var(--muted);margin-right:.4rem">Relevant planets:</span>' +
+        relevant_planets.map(p =>
+          `<span class="planet-pill dignity-${p.dignity}" title="${p.sign} · H${p.house} · ${p.nakshatra}">${p.name} H${p.house} (${p.dignity})</span>`
+        ).join('') + '</div>';
+    }
+
+    // Matched rules
+    if (matched_rules && matched_rules.length > 0) {
+      html += '<div style="margin-top:.5rem;border-top:1px solid var(--border);padding-top:.4rem">' +
+        `<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">${matched_rules.length} classical rule(s) applied:</div>` +
+        matched_rules.slice(0,3).map(r => {
+          const fh = r.formula_hits||0, fc = r.formula_count||0;
+          return `<div class="rule-mini"><div class="rule-text">${r.text.slice(0,180)}${r.text.length>180?'…':''}</div>`+
+            `<div class="rule-meta">Score: ${r.score} · Relevance: ${r.chart_relevance}${fh>0?' · ✓ '+fh+'/'+fc+' formulas verified':''}</div></div>`;
+        }).join('') + '</div>';
+    }
+
+    wrap.innerHTML = html;
+  }
+
+  document.getElementById('chatMessages').appendChild(wrap);
+  wrap.scrollIntoView({behavior:'smooth'});
+  return wrap;
+}
+
+function markdownToHtml(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+init();
+</script>
+{% endblock %}

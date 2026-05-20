@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Rule Library — Vedic Astrology{% endblock %}
+{% block extra_head %}
+<style>
+.lib-layout{display:grid;grid-template-columns:280px 1fr;gap:1.2rem;align-items:start}
+@media(max-width:900px){.lib-layout{grid-template-columns:1fr}}
+.lib-sidebar{position:sticky;top:80px}
+.rule-card{background:var(--card);border:1px solid var(--border);border-radius:.5rem;padding:.8rem 1rem;margin-bottom:.5rem;transition:border-color .15s}
+.rule-card:hover{border-color:var(--accent2)}
+.rule-text{font-size:.83rem;line-height:1.65;color:var(--text);margin-bottom:.4rem}
+.rule-meta{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;font-size:.72rem}
+.score-badge{background:var(--accent2);color:#fff;padding:.1rem .4rem;border-radius:.25rem;font-weight:700}
+.relevance-badge{background:#f59e0b;color:#000;padding:.1rem .4rem;border-radius:.25rem;font-weight:700}
+.cat-badge{background:#7c3aed22;color:var(--accent2);border:1px solid #7c3aed33;padding:.1rem .4rem;border-radius:99px}
+.planet-badge{background:#06b6d422;color:var(--accent3);border:1px solid #06b6d433;padding:.1rem .4rem;border-radius:99px}
+.formula-badge{background:#22c55e22;color:var(--ok);border:1px solid #22c55e33;padding:.1rem .4rem;border-radius:99px}
+.verified-badge{background:#22c55e;color:#000;padding:.1rem .5rem;border-radius:99px;font-weight:700}
+.source-badge{background:#f0a50022;color:var(--accent);border:1px solid #f0a50033;padding:.1rem .4rem;border-radius:99px}
+.filter-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.7rem}
+.filter-chip{padding:.25rem .7rem;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer;font-size:.75rem;transition:all .15s}
+.filter-chip:hover,.filter-chip.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.formula-tag{font-family:monospace;font-size:.7rem;background:#11112a;color:var(--accent3);border:1px solid var(--border);padding:.1rem .35rem;border-radius:.2rem;display:inline-block;margin:.1rem}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.8rem}
+.stat-box{background:#11112a;border:1px solid var(--border);border-radius:.4rem;padding:.5rem;text-align:center}
+.stat-num{font-size:1.2rem;font-weight:700;color:var(--accent)}
+.stat-lbl{font-size:.7rem;color:var(--muted)}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>📖 Rule Library</h1>
+<p style="color:var(--muted);margin-bottom:1rem;font-size:.88rem">Browse, search, and verify classical rules extracted from your uploaded books. Rules with formula tags are automatically matched against any chart.</p>
+
+<div class="lib-layout">
+  <!-- ── LEFT: filters + books ── -->
+  <div class="lib-sidebar">
+    <div class="card">
+      <h3>Books</h3>
+      <div id="bookSelector" style="font-size:.82rem"></div>
+      <a href="/pdf-toolkit" class="btn btn-sm btn-gold" style="margin-top:.6rem;display:inline-block">+ Upload PDF</a>
+    </div>
+
+    <div class="card" style="margin-top:.8rem">
+      <h3>Filter by Planet</h3>
+      <div class="filter-row" id="planetFilters"></div>
+    </div>
+
+    <div class="card" style="margin-top:.8rem">
+      <h3>Filter by House</h3>
+      <div class="filter-row" id="houseFilters"></div>
+    </div>
+
+    <div class="card" style="margin-top:.8rem">
+      <h3>Filter by Category</h3>
+      <div class="filter-row" id="catFilters"></div>
+    </div>
+
+    <div class="card" style="margin-top:.8rem">
+      <h3>Match Against Chart</h3>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Enter birth data to see which rules apply to a specific chart.</p>
+      <div class="form-group"><label>Year</label><input type="number" id="cy" value="1990"></div>
+      <div class="form-group"><label>Month</label><input type="number" id="cm" value="1" min="1" max="12"></div>
+      <div class="form-group"><label>Day</label><input type="number" id="cd" value="1" min="1" max="31"></div>
+      <div class="form-group"><label>Hour</label><input type="number" id="chr" value="6" min="0" max="23"></div>
+      <div class="form-group"><label>Lat/Lon</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem">
+          <input type="number" id="clat" value="13.0827" step="0.001">
+          <input type="number" id="clon" value="80.2707" step="0.001">
+        </div>
+      </div>
+      <div class="form-group"><label>TZ offset</label><input type="number" id="ctz" value="5.5" step="0.5"></div>
+      <button class="btn btn-cyan btn-sm" style="width:100%;margin-top:.4rem" onclick="matchChart()">Match to Chart</button>
+      <div id="matchStatus" style="font-size:.75rem;color:var(--muted);margin-top:.3rem"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: rule list ── -->
+  <div>
+    <div class="card" style="margin-bottom:.8rem">
+      <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
+        <input type="text" id="searchBox" placeholder="Search rules…" style="flex:1;min-width:180px" oninput="filterRules()">
+        <div class="stats-grid" style="min-width:240px">
+          <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total Rules</div></div>
+          <div class="stat-box"><div class="stat-num" id="statVerified">0</div><div class="stat-lbl">Verified</div></div>
+          <div class="stat-box"><div class="stat-num" id="statShown">0</div><div class="stat-lbl">Shown</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="ruleList"></div>
+    <div id="loadMoreWrap" style="text-align:center;margin-top:.5rem;display:none">
+      <button class="btn btn-sm btn-primary" onclick="loadMore()">Load More</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allRules = [];
+let filteredRules = [];
+let chartMatchMap = {};  // rule_text_key -> relevance
+let activeBook    = null;
+let activePlanets = new Set();
+let activeHouses  = new Set();
+let activeCats    = new Set();
+let displayCount  = 30;
+
+const PLANETS   = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+const CATS      = ['yoga','house','dignity','dasha','nakshatra','general'];
+
+async function init() {
+  // Build planet filters
+  const pf = document.getElementById('planetFilters');
+  PLANETS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className='filter-chip'; btn.textContent=p; btn.dataset.val=p;
+    btn.onclick=()=>toggleFilter(activePlanets,p,btn);
+    pf.appendChild(btn);
+  });
+  // House filters
+  const hf = document.getElementById('houseFilters');
+  for(let h=1;h<=12;h++){
+    const btn=document.createElement('button');
+    btn.className='filter-chip'; btn.textContent='H'+h; btn.dataset.val=h;
+    btn.onclick=()=>toggleFilter(activeHouses,h,btn);
+    hf.appendChild(btn);
+  }
+  // Category filters
+  const cf = document.getElementById('catFilters');
+  CATS.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='filter-chip'; btn.textContent=c.charAt(0).toUpperCase()+c.slice(1); btn.dataset.val=c;
+    btn.onclick=()=>toggleFilter(activeCats,c,btn);
+    cf.appendChild(btn);
+  });
+
+  await loadBooks();
+}
+
+function toggleFilter(set, val, btn) {
+  if(set.has(val)){ set.delete(val); btn.classList.remove('active'); }
+  else { set.add(val); btn.classList.add('active'); }
+  displayCount=30; filterRules();
+}
+
+async function loadBooks() {
+  const r = await fetch('/api/books');
+  const d = await r.json();
+  const books = d.books || [];
+  const sel = document.getElementById('bookSelector');
+  if (!books.length) {
+    sel.innerHTML='<div style="color:var(--muted);font-size:.78rem">No books uploaded yet. <a href="/pdf-toolkit" style="color:var(--accent2)">Upload PDFs</a> to build the library.</div>';
+    return;
+  }
+  sel.innerHTML = books.map(b=>
+    `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;padding:.3rem .4rem;border-radius:.3rem;cursor:pointer;border:1px solid transparent" class="book-row" data-id="${b.book_id}" onclick="selectBook('${b.book_id}',this)">
+      <span style="font-size:.78rem">📚 ${b.filename}</span>
+      <span style="font-size:.7rem;color:var(--muted)">${b.rules} rules</span>
+    </div>`
+  ).join('');
+
+  // Auto-load first book
+  if (books.length > 0) {
+    const firstEl = sel.querySelector('.book-row');
+    selectBook(books[0].book_id, firstEl);
+  }
+}
+
+async function selectBook(bookId, el) {
+  document.querySelectorAll('.book-row').forEach(r=>r.style.background='');
+  el.style.background='var(--border)';
+  activeBook = bookId;
+  await loadRules(bookId);
+}
+
+async function loadRules(bookId) {
+  document.getElementById('ruleList').innerHTML = '<div style="color:var(--muted);padding:1rem;text-align:center"><span class="spinner"></span> Loading rules…</div>';
+  try {
+    const r = await fetch(`/api/books/${bookId}/parse-rules?min_score=2`);
+    const d = await r.json();
+    allRules = d.all_rules || [];
+    document.getElementById('statTotal').textContent = allRules.length;
+    document.getElementById('statVerified').textContent = allRules.filter(r=>(r.formulas||[]).length>0).length;
+    chartMatchMap = {};
+    displayCount = 30;
+    filterRules();
+  } catch(e) {
+    document.getElementById('ruleList').innerHTML = `<div class="alert alert-err">Error: ${e.message}</div>`;
+  }
+}
+
+async function matchChart() {
+  if (!activeBook) { alert('Select a book first'); return; }
+  document.getElementById('matchStatus').textContent = 'Matching…';
+  try {
+    const r = await fetch('/api/rule-library/search', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        book_ids: [activeBook],
+        year: +document.getElementById('cy').value,
+        month: +document.getElementById('cm').value,
+        day: +document.getElementById('cd').value,
+        hour: +document.getElementById('chr').value,
+        minute: 0,
+        latitude: +document.getElementById('clat').value,
+        longitude: +document.getElementById('clon').value,
+        timezone: +document.getElementById('ctz').value,
+      })
+    });
+    const d = await r.json();
+    chartMatchMap = {};
+    (d.matched || []).forEach(rule=>{
+      chartMatchMap[rule.text.slice(0,80)] = rule.chart_relevance || 0;
+    });
+    document.getElementById('matchStatus').textContent = `✓ ${d.matched?.length||0} rules matched`;
+    document.getElementById('matchStatus').style.color = 'var(--ok)';
+    filterRules();
+  } catch(e) {
+    document.getElementById('matchStatus').textContent = '⚠ ' + e.message;
+    document.getElementById('matchStatus').style.color = 'var(--err)';
+  }
+}
+
+function filterRules() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  filteredRules = allRules.filter(r => {
+    if (q && !r.text.toLowerCase().includes(q)) return false;
+    if (activePlanets.size > 0 && !([...activePlanets].some(p=>(r.planets||[]).includes(p)))) return false;
+    if (activeHouses.size > 0 && !([...activeHouses].some(h=>(r.houses||[]).includes(+h)))) return false;
+    if (activeCats.size > 0 && !([...activeCats].some(c=>(r.categories||[]).includes(c)))) return false;
+    return true;
+  });
+
+  // If chart matched, sort by relevance
+  if (Object.keys(chartMatchMap).length > 0) {
+    filteredRules.sort((a,b)=>{
+      const ra = chartMatchMap[a.text.slice(0,80)] || 0;
+      const rb = chartMatchMap[b.text.slice(0,80)] || 0;
+      return rb - ra || b.score - a.score;
+    });
+  }
+
+  document.getElementById('statShown').textContent = Math.min(displayCount, filteredRules.length);
+  renderRules();
+}
+
+function renderRules() {
+  const list = document.getElementById('ruleList');
+  const rules = filteredRules.slice(0, displayCount);
+  if (rules.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);padding:1rem;text-align:center">No rules match current filters.</div>';
+    document.getElementById('loadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = rules.map(r => {
+    const key = r.text.slice(0,80);
+    const relevance = chartMatchMap[key];
+    const formulas  = r.formulas || [];
+    const hasFormulas = formulas.length > 0;
+
+    const formulaTags = formulas.map(f=>{
+      let label = f.type.replace('_',' ');
+      if(f.planet) label += ` ${f.planet}`;
+      if(f.sign)   label += ` in ${f.sign}`;
+      if(f.house)  label += ` in H${f.house}`;
+      if(f.planet1&&f.planet2) label = `${f.planet1} ⊕ ${f.planet2}`;
+      return `<span class="formula-tag">${label}</span>`;
+    }).join('');
+
+    const catBadges = (r.categories||[]).map(c=>`<span class="cat-badge">${c}</span>`).join('');
+    const plBadges  = (r.planets||[]).slice(0,4).map(p=>`<span class="planet-badge">${p}</span>`).join('');
+
+    return `<div class="rule-card">
+      <div class="rule-text">${r.text}</div>
+      <div class="rule-meta">
+        <span class="score-badge">score ${r.score}</span>
+        ${relevance != null ? `<span class="relevance-badge">chart relevance ${relevance}</span>` : ''}
+        ${hasFormulas ? `<span class="verified-badge">✓ ${formulas.length} formula${formulas.length>1?'s':''}</span>` : ''}
+        ${catBadges}${plBadges}
+      </div>
+      ${hasFormulas ? `<div style="margin-top:.4rem">${formulaTags}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('loadMoreWrap').style.display =
+    filteredRules.length > displayCount ? 'block' : 'none';
+}
+
+function loadMore() {
+  displayCount += 30;
+  document.getElementById('statShown').textContent = Math.min(displayCount, filteredRules.length);
+  renderRules();
+}
+
+init();
+</script>
+{% endblock %}

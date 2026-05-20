@@ -5,16 +5,26 @@
 .interp-layout{display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start}
 @media(max-width:820px){.interp-layout{grid-template-columns:1fr}}
 .para-card{border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:1rem 1.1rem;margin-bottom:.8rem;background:var(--card-bg,#1a1a2e);position:relative}
-.para-card.lagna{border-left:3px solid #60a5fa}
-.para-card.dignity{border-left:3px solid #facc15}
-.para-card.yoga,.para-card.yoga_detail{border-left:3px solid #c084fc}
-.para-card.strength{border-left:3px solid #4ade80}
-.para-card.dosha{border-left:3px solid #f87171}
-.para-card.classical{border-left:3px solid #fb923c}
+.para-card.lagna     {border-left:4px solid #60a5fa}
+.para-card.dignity   {border-left:4px solid #facc15}
+.para-card.yoga,.para-card.yoga_detail{border-left:4px solid #c084fc}
+.para-card.strength  {border-left:4px solid #4ade80}
+.para-card.dosha     {border-left:4px solid #f87171}
+.para-card.classical {border-left:4px solid #fb923c}
+.para-card.planet    {border-left:4px solid #06b6d4;background:#06b6d408}
+.para-card.house_lord{border-left:4px solid #f0a500;background:#f0a50008}
+.para-card.conjunction{border-left:4px solid #ec4899;background:#ec489908}
 .para-icon{font-size:1.1rem;margin-right:.4rem}
 .para-title{font-weight:700;font-size:.95rem;margin-bottom:.35rem}
-.para-text{font-size:.85rem;line-height:1.65;color:var(--fg,#e0e0e0)}
+.para-text{font-size:.85rem;line-height:1.72;color:var(--fg,#e0e0e0)}
+.para-text strong{color:var(--accent3,#06b6d4)}
 .para-pairs{font-size:.75rem;color:var(--muted,#888);margin-top:.3rem}
+/* Dignity badge inside planet cards */
+.dignity-tag{display:inline-block;font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:99px;margin-left:.4rem}
+.dignity-exalted{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
+.dignity-debilitated{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
+.dignity-own,.dignity-moolatrikona{background:#06b6d422;color:#06b6d4;border:1px solid #06b6d444}
+.dignity-neutral{background:#9090b022;color:#9090b0;border:1px solid #9090b044}
 .rule-row{border-bottom:1px solid var(--border,#2a2a3a);padding:.55rem .2rem;font-size:.82rem}
 .rule-row:last-child{border-bottom:none}
 .rule-score{display:inline-block;min-width:28px;text-align:center;background:var(--accent,#c084fc);color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .3rem;margin-right:.4rem}
@@ -166,7 +176,14 @@ function renderResults(data){
   document.getElementById('interpResults').style.display='block';
 }
 
-function catLabel(c){return{lagna:'Ascendant',dignity:'Dignity',yoga:'Raja Yoga',yoga_detail:'Yoga Detail',strength:'Strength',dosha:'Dosha',classical:'Classical'}[c]||c;}
+function catLabel(c){
+  return{
+    lagna:'Ascendant',dignity:'Dignity',
+    planet:'Planets',house_lord:'House Lords',conjunction:'Conjunctions',
+    yoga:'Raja Yogas',yoga_detail:'Yoga Detail',
+    strength:'Strength',dosha:'Doshas',classical:'Classical'
+  }[c]||(c.charAt(0).toUpperCase()+c.slice(1));
+}
 
 function filterParas(btn){
   const cat=btn.dataset.cat;_activeFilter=cat;

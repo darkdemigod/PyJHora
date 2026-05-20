@@ -262,6 +262,63 @@ FORMULA_PATTERNS = [
      'special_house_type', ('planet',)),
 ]
 
+# ── Planet natural significations ────────────────────────────────────────────
+PLANET_KARAKAS = {
+    'Sun':     'soul, self, authority, vitality, father, career in leadership, government recognition',
+    'Moon':    'mind, emotions, mother, public reputation, fluids, sensitivity, memory, intuition',
+    'Mars':    'courage, energy, siblings, real estate, passion, conflict, surgery, blood, ambition',
+    'Mercury': 'intelligence, communication, trade, education, writing, analysis, friends, skill',
+    'Jupiter': 'wisdom, dharma, children, guru, wealth expansion, husband (for women), liver, grace',
+    'Venus':   'love, wife (for men), arts, vehicles, luxury, beauty, pleasure, sensual comforts',
+    'Saturn':  'discipline, longevity, delays, servants, chronic labor, bones, isolation, karmic lessons',
+    'Rahu':    'foreign elements, obsession, unconventional paths, illusion, sudden disruptions, ambition',
+    'Ketu':    'spirituality, liberation, past life karma, renunciation, detachment, sharp intuition',
+}
+
+# ── Life area → primary houses ───────────────────────────────────────────────
+LIFE_AREA_HOUSES = {
+    'career':       [10, 6, 2, 11],
+    'marriage':     [7, 2, 11, 8],
+    'wealth':       [2, 11, 5, 9],
+    'health':       [1, 6, 8, 12],
+    'children':     [5, 9],
+    'education':    [4, 5, 9],
+    'travel':       [3, 9, 12],
+    'property':     [4, 2],
+    'spirituality': [9, 12, 8],
+    'mother':       [4, 2],
+    'father':       [9, 10],
+    'siblings':     [3, 11],
+    'enemies':      [6, 12],
+    'longevity':    [8, 1],
+    'creativity':   [5, 1, 3],
+    'social':       [11, 3, 7],
+    'foreign':      [12, 9, 3],
+    'relationship': [7, 11, 5],
+}
+
+# ── Life area keyword detection ───────────────────────────────────────────────
+LIFE_AREA_KEYWORDS = {
+    'career':       ['career','job','work','profession','business','promotion','success','status','occupation','10th','vocation'],
+    'marriage':     ['marriage','spouse','wife','husband','relationship','partner','wedding','love','7th','divorce','marry','matrimony'],
+    'wealth':       ['money','wealth','income','finance','rich','savings','investment','earn','2nd','11th','debt','poor','financial'],
+    'health':       ['health','disease','illness','sick','hospital','surgery','body','fitness','medicine','6th','pain','recover'],
+    'children':     ['children','child','son','daughter','kids','fertility','5th','baby','pregnancy','progeny'],
+    'education':    ['education','study','college','degree','school','learning','graduation','knowledge','university','course'],
+    'travel':       ['travel','foreign','abroad','immigration','trip','journey','12th','9th','settle','emigrate','overseas'],
+    'property':     ['property','house','home','land','real estate','apartment','4th','vehicle','car','asset'],
+    'spirituality': ['spiritual','moksha','liberation','religion','faith','god','meditation','astrology','guru','temple'],
+    'mother':       ['mother','mom','maternal','4th'],
+    'father':       ['father','dad','paternal','9th'],
+    'siblings':     ['brother','sister','sibling','3rd'],
+    'enemies':      ['enemy','enemies','opposition','competition','rival','legal','court','lawsuit','litigation'],
+    'longevity':    ['longevity','lifespan','death','legacy','inheritance','8th','accident','crisis'],
+    'creativity':   ['creativity','art','music','dance','writing','talent','hobby','performance','creative'],
+    'social':       ['friends','network','social','community','11th','group','organization','society'],
+    'foreign':      ['foreign','abroad','immigration','settle','overseas','international','outside'],
+    'relationship': ['relationship','love','partner','companion','dating','romance','romantic'],
+}
+
 # ── helper utilities ────────────────────────────────────────────────────────
 def safe_float(value, default=0.0):
     try:
@@ -577,162 +634,518 @@ def _house_lord_analysis(positions):
         })
     return rows
 
+# ── Ordinal helper ──────────────────────────────────────────────────────────
+def _ordinal(n):
+    n = int(n)
+    if n in (11, 12, 13): return f'{n}th'
+    return {1:'1st', 2:'2nd', 3:'3rd'}.get(n % 10, f'{n}th')
+
+# ── Single-planet cause+effect delineation ───────────────────────────────────
+def _delineate_planet(p, positions, lagna_rasi, sb_totals=None):
+    """Return a rich cause+effect paragraph for one planet placement."""
+    name     = p['name']
+    house    = p['house']
+    sign     = p['sign']
+    dignity  = p['dignity']
+    nak      = p['nakshatra']
+    nak_lord = p.get('nak_lord', '')
+    nak_pada = p.get('nak_pada', 1)
+
+    ruled_houses = [h for h in range(1, 13)
+                    if SIGN_LORDS.get(RASI_SIGNS[(lagna_rasi + h - 1) % 12]) == name]
+    karakas       = PLANET_KARAKAS.get(name, 'natural cosmic force')
+    placement_sig = HOUSE_KARKA.get(house, '')
+
+    # ── CAUSE ─────────────────────────────────────────────────────────────────
+    if ruled_houses:
+        ruled_sigs = [HOUSE_KARKA.get(h, f'H{h}').split(',')[0].strip() for h in ruled_houses]
+        lords_txt  = ' and the '.join(
+            f"{_ordinal(h)} house ({ruled_sigs[i]})" for i, h in enumerate(ruled_houses))
+        cause = (f"{name} rules the {lords_txt} from your Lagna, and is currently placed "
+                 f"in your {_ordinal(house)} house ({sign}, {nak} nakshatra pada {nak_pada}, "
+                 f"ruled by {nak_lord})")
+    else:
+        cause = (f"{name} — natural significator of {karakas} — sits in your "
+                 f"{_ordinal(house)} house ({sign}, {nak} nakshatra, ruled by {nak_lord})")
+
+    # ── EFFECT ────────────────────────────────────────────────────────────────
+    effects = []
+    if ruled_houses:
+        primary = ruled_houses[0]
+        p_sig   = HOUSE_KARKA.get(primary, '').split(',')[0].strip()
+        h_sig   = placement_sig.split(',')[0].strip()
+
+        if primary == house:
+            effects.append(
+                f"As the lord sitting in its own bhava, {name} powerfully self-activates {p_sig}. "
+                f"The native has strong natural ability and self-reliance in this domain. "
+                f"Results are stable and consistent throughout life, not just during dasha periods.")
+        elif house in KENDRA_HOUSES:
+            effects.append(
+                f"Placed in the angular {_ordinal(house)} house (kendra — {h_sig}), {name} brings "
+                f"the energy of {p_sig} into material, visible, tangible expression. "
+                f"Kendra placement gives maximum power to manifest in the outer world. "
+                f"The connection between {p_sig} and {h_sig} is strong and productive — "
+                f"these two life areas reinforce each other, and results are concrete and notable. "
+                f"During {name}'s Mahadasha, the {_ordinal(primary)} house matters ({p_sig}) "
+                f"manifest powerfully through the domain of the {_ordinal(house)} house.")
+        elif house in TRIKONA_HOUSES:
+            effects.append(
+                f"Sitting in the trikona ({_ordinal(house)} house — {h_sig}), {name} brings "
+                f"dharmic grace and past-life merit to {p_sig}. "
+                f"Trikona placements indicate the Universe supports these areas — the native finds "
+                f"that {p_sig} flows with relative ease. Spiritual blessings reinforce worldly "
+                f"progress, and this planet delivers results with less friction than other placements.")
+        elif house in DUSTHANA_HOUSES:
+            effects.append(
+                f"Placed in the {_ordinal(house)} house (dusthana — {h_sig}), {name} creates "
+                f"initial turbulence, delays, and hidden challenges around {p_sig}. "
+                f"The native may face recurring obstacles or losses in this area before mastery. "
+                f"Check for Viparita Raja Yoga: if the lord of this same dusthana is also in a "
+                f"dusthana, unexpected gains emerge from apparent setbacks. "
+                f"With sustained effort and remediation for {name}, this placement ultimately "
+                f"builds exceptional resilience and unconventional success.")
+        else:
+            effects.append(
+                f"In the neutral {_ordinal(house)} house ({h_sig}), {name} links the energy of "
+                f"{p_sig} with {h_sig}, creating a karmic connection where progress in one area "
+                f"influences the other. Results here are moderate but consistent.")
+
+    # ── DIGNITY ──────────────────────────────────────────────────────────────
+    if dignity == 'exalted':
+        effects.append(
+            f"{name} is exalted in {sign} — at its absolute maximum strength. "
+            f"The native receives peak, exceptional results from every area {name} signifies. "
+            f"Natural significations ({karakas.split(',')[0]}) flourish especially during "
+            f"{name} Mahadasha. An exalted planet is the most powerful positive force in the chart.")
+    elif dignity == 'debilitated':
+        nb_lord    = SIGN_LORDS.get(sign, '')
+        exalt_sg   = EXALTATION_SIGN.get(name, '')
+        exalt_lord = SIGN_LORDS.get(exalt_sg, '') if exalt_sg else ''
+        effects.append(
+            f"{name} is debilitated (neecha) in {sign} — it struggles to deliver its best results, "
+            f"and the life areas it governs may feel chronically difficult or blocked. "
+            f"Check for Neecha Bhanga: if {nb_lord} (sign lord) or "
+            f"{exalt_lord} (exaltation lord) sits in a kendra or trikona, "
+            f"the debilitation is cancelled and becomes a powerful Raja Yoga — "
+            f"exceptional results after initial struggle.")
+    elif dignity == 'own':
+        effects.append(
+            f"In its own sign {sign}, {name} is at home — it delivers steady, reliable, "
+            f"and consistent results throughout life. Own-sign planets are dependable pillars.")
+    elif dignity == 'moolatrikona':
+        effects.append(
+            f"In moolatrikona sign {sign}, {name} is especially purposeful and generous — "
+            f"it expresses its best qualities outward, bringing benefits to the native and those "
+            f"around them. This is stronger than own-sign for giving results to others.")
+
+    # ── SHAD BALA ────────────────────────────────────────────────────────────
+    if sb_totals and name in sb_totals:
+        val = sb_totals[name]
+        if val >= 150:
+            effects.append(
+                f"Shad Bala confirms superior strength ({val:.0f} Rupas ≥ 150) — "
+                f"this planet's dasha periods will be especially potent and life-defining.")
+        elif val < 80:
+            effects.append(
+                f"Shad Bala shows below-threshold strength ({val:.0f} Rupas). "
+                f"Gemstone, mantra japa, and charity for {name} will help unlock its potential.")
+
+    # ── ASPECTS ──────────────────────────────────────────────────────────────
+    asp7 = ((house - 1 + 6) % 12) + 1
+    asp_houses = [asp7] + [((house - 1 + s - 1) % 12) + 1 for s in SPECIAL_ASPECTS.get(name, [])]
+    aspected_pls = [q['name'] for q in positions
+                    if q['name'] not in ('Lagna', name) and q['house'] in asp_houses]
+    if aspected_pls:
+        effects.append(
+            f"{name} casts its aspect on the {_ordinal(asp7)} house"
+            + (f", directly influencing {', '.join(aspected_pls)}" if aspected_pls else '')
+            + f" — adding its nature to those planetary expressions.")
+
+    return cause + '. ' + ' '.join(effects)
+
+
+# ── Discussion response generator ────────────────────────────────────────────
+def _generate_discussion_response(message, positions, all_rules, raja_yogas=None, doshas=None):
+    """Return (response_text, relevant_planets, matched_rules) for a life discussion query."""
+    msg_lower = message.lower()
+    lagna = next((p for p in positions if p['name'] == 'Lagna'), None)
+    if not lagna:
+        return "Please enter your birth details to begin the discussion.", [], []
+
+    lagna_rasi = lagna['rasi']
+    lagna_sign = lagna['sign']
+
+    detected_areas = [area for area, kws in LIFE_AREA_KEYWORDS.items()
+                      if any(kw in msg_lower for kw in kws)]
+    if not detected_areas:
+        detected_areas = ['career', 'wealth', 'marriage', 'health']
+
+    relevant_houses = set()
+    for area in detected_areas:
+        relevant_houses.update(LIFE_AREA_HOUSES.get(area, []))
+
+    seen, unique_planets = set(), []
+    for p in positions:
+        if p['name'] == 'Lagna': continue
+        is_rel = p['house'] in relevant_houses
+        if not is_rel:
+            for h in relevant_houses:
+                if SIGN_LORDS.get(RASI_SIGNS[(lagna_rasi + h - 1) % 12]) == p['name']:
+                    is_rel = True; break
+        if is_rel and p['name'] not in seen:
+            seen.add(p['name']); unique_planets.append(p)
+
+    area_blocks = []
+    for area in detected_areas[:4]:
+        houses = LIFE_AREA_HOUSES.get(area, [])
+        if not houses: continue
+        ph        = houses[0]
+        h_sign    = RASI_SIGNS[(lagna_rasi + ph - 1) % 12]
+        lord_name = SIGN_LORDS.get(h_sign, '')
+        lord_p    = next((p for p in positions if p['name'] == lord_name), None)
+        occupants = [p for p in positions if p['name'] != 'Lagna' and p['house'] == ph]
+        sig       = HOUSE_KARKA.get(ph, area)
+
+        lines = [f"### {area.title()} → {_ordinal(ph)} House ({h_sign})"]
+        lines.append(f"The {_ordinal(ph)} house governs: *{sig}*.")
+
+        if lord_p:
+            lh     = lord_p['house']
+            lh_sig = HOUSE_KARKA.get(lh, '').split(',')[0].strip()
+            if lh in KENDRA_HOUSES or lh in TRIKONA_HOUSES:
+                strength = f"strongly placed in a {'kendra' if lh in KENDRA_HOUSES else 'trikona'} ({_ordinal(lh)} house — {lh_sig})"
+                effect   = (f"This gives natural strength and positive flow to your {area}. "
+                            f"Kendra/trikona placement means the Universe actively supports this area. "
+                            f"During {lord_name}'s Mahadasha, major {area} milestones occur with less friction.")
+            elif lh in DUSTHANA_HOUSES:
+                strength = f"placed in a dusthana ({_ordinal(lh)} house — {lh_sig})"
+                effect   = (f"This creates initial obstacles, hidden challenges, and delays in {area}. "
+                            f"Check for Viparita Raja Yoga (lord of dusthana in dusthana = unexpected gains). "
+                            f"Targeted remediation for {lord_name} will specifically improve {area} outcomes.")
+            else:
+                strength = f"moderately placed ({_ordinal(lh)} house — {lh_sig})"
+                effect   = (f"This gives steady, moderate {area} results. "
+                            f"Consistent effort over time yields meaningful progress in this domain.")
+
+            dign_note = ''
+            if lord_p['dignity'] == 'exalted':
+                dign_note = f" **Bonus**: {lord_name} is exalted — peak results in {area}."
+            elif lord_p['dignity'] == 'debilitated':
+                dign_note = (f" **Note**: {lord_name} is debilitated — check for Neecha Bhanga "
+                             f"which can transform this into exceptional {area} results.")
+
+            lines.append(f"**Cause**: Your {area} lord {lord_name} is {strength} in {lord_p['sign']}.")
+            lines.append(f"**Effect**: {effect}{dign_note}")
+
+        if occupants:
+            occ_parts = [f"{p['name']} ({PLANET_KARAKAS.get(p['name'],'').split(',')[0]})" for p in occupants]
+            lines.append(
+                f"**Direct occupants**: {', '.join(occ_parts)} sit in your {_ordinal(ph)} house, "
+                f"adding their natures directly to {area} — making this a multidimensional life area.")
+
+        area_blocks.append('\n'.join(lines))
+
+    matched   = _match_rules_to_chart(all_rules, positions)
+    area_kws  = [kw for a in detected_areas for kw in LIFE_AREA_KEYWORDS.get(a, [])]
+    area_rules = []
+    for rule in matched:
+        if any(kw in rule['text'].lower() for kw in area_kws):
+            area_rules.append(rule)
+        if len(area_rules) >= 6: break
+
+    parts = [f"Reading your **{lagna_sign} Lagna** chart for: **{', '.join(a.title() for a in detected_areas)}**\n"]
+    parts.extend(area_blocks)
+
+    if area_rules:
+        parts.append("\n---\n### Classical Texts on Your Query")
+        for rule in area_rules[:3]:
+            fh = rule.get('formula_hits', 0); fc = rule.get('formula_count', 0)
+            badge = f" ✓ *verified {fh}/{fc} formulas*" if fh > 0 else ""
+            parts.append(f"> \"{rule['text'][:240]}{'...' if len(rule['text']) > 240 else ''}\"  {badge}")
+
+    if raja_yogas and any(a in detected_areas for a in ['career','wealth','marriage','relationship']):
+        parts.append("\n---\n### Relevant Yogas in Your Chart")
+        for ry in raja_yogas[:2]:
+            effect_txt = re.sub(r'<[^>]+>', ' ', str(ry.get('effect', ''))).strip()[:200]
+            if effect_txt:
+                parts.append(f"- **{ry.get('name', 'Yoga')}**: {effect_txt}")
+
+    if doshas:
+        active = {k: v for k, v in doshas.items()
+                  if 'no' not in str(v).lower() and 'not' not in str(v).lower()}
+        if active and any(a in detected_areas for a in ['marriage','health','longevity']):
+            parts.append("\n---\n### Active Doshas Relevant to Your Query")
+            for dname in list(active.keys())[:2]:
+                parts.append(f"- **{dname}** is active — consult a Jyotishi for personalised remediation.")
+
+    return '\n\n'.join(parts), unique_planets, area_rules
+
+
+# ── Chart narrative interpretation ───────────────────────────────────────────
 def _deep_interpret(positions, raja_yogas, doshas, shad_bala, matched_rules=None):
-    """Generate rich paragraph-level astrological interpretation."""
-    paras = []
+    """Generate planet-by-planet cause+effect delineation of the natal chart."""
+    from collections import defaultdict
+    paras      = []
+    lagna      = next((p for p in positions if p['name'] == 'Lagna'), None)
+    if not lagna:
+        return [{'title':'Error','text':'Lagna not found.','category':'error','icon':'⚠'}]
+
+    lagna_rasi = lagna['rasi']
+    lagna_sign = lagna['sign']
+    sb_totals  = shad_bala.get('totals', {}) if isinstance(shad_bala, dict) else {}
+
     SIGN_DESC = {
-        'Aries':'energetic, pioneering and assertive — Mars-ruled fire',
-        'Taurus':'steadfast, sensual and materially grounded — Venus-ruled earth',
-        'Gemini':'communicative, versatile and intellectually curious — Mercury-ruled air',
-        'Cancer':'nurturing, emotionally sensitive and home-oriented — Moon-ruled water',
-        'Leo':'regal, creative and leadership-focused — Sun-ruled fire',
-        'Virgo':'analytical, service-oriented and detail-conscious — Mercury-ruled earth',
-        'Libra':'harmonious, relationship-focused and justice-seeking — Venus-ruled air',
-        'Scorpio':'intense, transformative and depth-seeking — Mars-ruled water',
-        'Sagittarius':'philosophical, expansive and truth-seeking — Jupiter-ruled fire',
-        'Capricorn':'disciplined, achievement-oriented and structured — Saturn-ruled earth',
-        'Aquarius':'innovative, humanitarian and unconventional — Saturn-ruled air',
-        'Pisces':'compassionate, mystical and spiritually attuned — Jupiter-ruled water',
+        'Aries':       'energetic, pioneering and self-driven — Mars-ruled fire, the natural doer',
+        'Taurus':      'patient, steadfast and materially grounded — Venus-ruled earth, the natural builder',
+        'Gemini':      'communicative, versatile and intellectually curious — Mercury-ruled air, the natural thinker',
+        'Cancer':      'nurturing, emotionally sensitive and home-oriented — Moon-ruled water, the natural caretaker',
+        'Leo':         'regal, creative and leadership-focused — Sun-ruled fire, the natural king',
+        'Virgo':       'analytical, service-oriented and detail-conscious — Mercury-ruled earth, the natural perfectionist',
+        'Libra':       'harmonious, relationship-focused and justice-seeking — Venus-ruled air, the natural diplomat',
+        'Scorpio':     'intense, transformative and depth-seeking — Mars-ruled water, the natural investigator',
+        'Sagittarius': 'philosophical, expansive and truth-seeking — Jupiter-ruled fire, the natural seeker',
+        'Capricorn':   'disciplined, achievement-oriented and structured — Saturn-ruled earth, the natural achiever',
+        'Aquarius':    'innovative, humanitarian and unconventional — Saturn-ruled air, the natural visionary',
+        'Pisces':      'compassionate, mystical and spiritually attuned — Jupiter-ruled water, the natural dreamer',
     }
 
-    # 1. Lagna & its lord
-    lagna = next((p for p in positions if p['name'] == 'Lagna'), None)
-    if lagna:
-        lagna_lord_name = SIGN_LORDS.get(lagna['sign'], '')
-        ll = next((p for p in positions if p['name'] == lagna_lord_name), None)
-        ll_txt = (f" The Lagna lord {lagna_lord_name} is placed in the "
-                  f"{ll['house']}th house ({ll['sign']}), indicating that the native's "
-                  f"core life-force operates through {HOUSE_KARKA.get(ll['house'],'')}." if ll else '')
-        paras.append({'title': f"{lagna['sign']} Ascendant — Core Personality",
-            'text': (f"The Lagna is in {lagna['sign']} at {lagna['lon_in_sign']:.2f}° "
-                     f"({lagna['nakshatra']} nakshatra, pada {lagna['nak_pada']}). "
-                     f"This makes the native {SIGN_DESC.get(lagna['sign'], '')}." + ll_txt),
-            'category': 'lagna', 'icon': '↑'})
+    # ── 1. LAGNA — the foundation of life ────────────────────────────────────
+    ll_name    = SIGN_LORDS.get(lagna_sign, '')
+    ll         = next((p for p in positions if p['name'] == ll_name), None)
+    lagna_text = (
+        f"Your Ascendant (Lagna) is in {lagna_sign} at {lagna['lon_in_sign']:.2f}°, "
+        f"in {lagna['nakshatra']} nakshatra (pada {lagna['nak_pada']}, "
+        f"lord: {lagna['nak_lord']}). This makes you fundamentally "
+        f"{SIGN_DESC.get(lagna_sign, '')}. "
+    )
+    if ll:
+        lh_sig = HOUSE_KARKA.get(ll['house'], '')
+        if ll['house'] in KENDRA_HOUSES | TRIKONA_HOUSES:
+            ll_strength = f"powerfully placed in the {_ordinal(ll['house'])} house (kendra/trikona)"
+            ll_effect   = (
+                f"This is an excellent configuration — your Lagna lord is strong, indicating "
+                f"good vitality, a clear sense of self, and the ability to manifest your Ascendant's "
+                f"nature in the world. The {_ordinal(ll['house'])} house domains "
+                f"({lh_sig.split(',')[0]}) become a central life theme through which you express "
+                f"your core identity. Expect strong results during {ll_name}'s Mahadasha.")
+        elif ll['house'] in DUSTHANA_HOUSES:
+            ll_strength = f"placed in a dusthana ({_ordinal(ll['house'])} house)"
+            ll_effect   = (
+                f"The Lagna lord in a dusthana creates some life challenges — the native may "
+                f"encounter obstacles in health, self-expression, or life direction, particularly "
+                f"early in life. However, this placement also builds extraordinary resilience. "
+                f"Check for Viparita Raja Yoga if the dusthana lord itself is in a dusthana.")
+        else:
+            ll_strength = f"moderately placed in the {_ordinal(ll['house'])} house"
+            ll_effect   = (
+                f"Your life force flows through the {_ordinal(ll['house'])} house domain "
+                f"({lh_sig.split(',')[0]}) — these matters shape your purpose and fulfillment.")
+        lagna_text += (
+            f"Your Lagna lord {ll_name} ({PLANET_KARAKAS.get(ll_name,'').split(',')[0]}) "
+            f"is {ll_strength} in {ll['sign']}. {ll_effect}"
+        )
+    paras.append({
+        'title':    f"{lagna_sign} Ascendant — Your Core Life Blueprint",
+        'text':     lagna_text,
+        'category': 'lagna',
+        'icon':     '↑',
+    })
 
-    # 2. Planet dignities
+    # ── 2. PLANET-BY-PLANET cause+effect delineation ─────────────────────────
+    for pname in ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu']:
+        p = next((x for x in positions if x['name'] == pname), None)
+        if not p: continue
+        text      = _delineate_planet(p, positions, lagna_rasi, sb_totals)
+        h_type_lbl= {
+            'kendra':   'Kendra — Angular',
+            'trikona':  'Trikona — Trine',
+            'dusthana': 'Dusthana — Challenging',
+            'upachaya': 'Upachaya — Growth',
+            'neutral':  'Neutral',
+        }.get(p['house_type'], p['house_type'].title())
+        d_icon = {'exalted':'⬆','debilitated':'⬇','moolatrikona':'★','own':'◆','neutral':'·'}.get(p['dignity'],'·')
+        paras.append({
+            'title':    f"{pname} in {p['sign']} · H{p['house']} ({h_type_lbl}) {d_icon}",
+            'text':     text,
+            'category': 'planet',
+            'icon':     d_icon,
+            'meta': {
+                'planet':     pname,
+                'house':      p['house'],
+                'sign':       p['sign'],
+                'dignity':    p['dignity'],
+                'house_type': p['house_type'],
+                'nakshatra':  p['nakshatra'],
+            },
+        })
+
+    # ── 3. CONJUNCTIONS — multi-planet house analysis ────────────────────────
+    house_occ = defaultdict(list)
     for p in positions:
-        if p['name'] == 'Lagna': continue
-        h_sig = HOUSE_KARKA.get(p['house'], '')
-        if p['dignity'] == 'exalted':
-            paras.append({'title': f"{p['name']} Exalted in {p['sign']} (H{p['house']})",
-                'text': (f"{p['name']} is exalted in {p['sign']} in the {p['house']}th bhava "
-                         f"({h_sig}). This is maximum planetary strength — the native gains "
-                         f"greatly from this planet's domain, especially during its Mahadasha."),
-                'category': 'dignity', 'icon': '⬆'})
-        elif p['dignity'] == 'debilitated':
-            paras.append({'title': f"{p['name']} Debilitated in {p['sign']} (H{p['house']})",
-                'text': (f"{p['name']} is in neecha (debilitation) in {p['sign']}, "
-                         f"{p['house']}th bhava ({h_sig}). Check for Neecha Bhanga: "
-                         f"if {SIGN_LORDS.get(p['sign'],'')} or the exaltation lord is in kendra, "
-                         f"the debilitation is cancelled conferring Raja Yoga status."),
-                'category': 'dignity', 'icon': '⬇'})
-        elif p['dignity'] == 'moolatrikona':
-            paras.append({'title': f"{p['name']} in Moolatrikona (H{p['house']})",
-                'text': (f"{p['name']} occupies its moolatrikona sign {p['sign']} in the "
-                         f"{p['house']}th bhava ({h_sig}), giving strong, stable results "
-                         f"comparable to its own sign placement."),
-                'category': 'dignity', 'icon': '★'})
+        if p['name'] != 'Lagna': house_occ[p['house']].append(p)
+    for h, occ in sorted(house_occ.items()):
+        if len(occ) < 2: continue
+        names    = [p['name'] for p in occ]
+        h_sig    = HOUSE_KARKA.get(h, '')
+        malefics = {'Sun','Mars','Saturn','Rahu','Ketu'}
+        mal_cnt  = sum(1 for n in names if n in malefics)
+        ben_cnt  = len(names) - mal_cnt
+        k_parts  = [PLANET_KARAKAS.get(n,'').split(',')[0].strip() for n in names]
+        if mal_cnt > ben_cnt:
+            mix_txt = (f"Malefics dominate ({', '.join(n for n in names if n in malefics)}), "
+                       f"intensifying challenges in {h_sig.split(',')[0]} but also creating "
+                       f"fierce focus, resilience, and the potential for exceptional achievement through struggle. ")
+        elif ben_cnt > mal_cnt:
+            mix_txt = (f"Benefics dominate, creating natural ease and abundance in "
+                       f"{h_sig.split(',')[0]}. ")
+        else:
+            mix_txt = f"A mixed conjunction creates complex, layered results in {h_sig.split(',')[0]}. "
+        conj_text = (
+            f"{' + '.join(names)} all converge in your {_ordinal(h)} house "
+            f"({occ[0]['sign'] if occ else ''} — {h_sig}). {mix_txt}"
+            f"Combined natures: {'; '.join(f'{n} ({k})' for n,k in zip(names,k_parts))}. "
+            f"The {_ordinal(h)} house becomes a zone of intense, layered energy. "
+            f"During any of these planets' Mahadasha, the matters of this house are powerfully "
+            f"activated and demand the native's full attention and engagement."
+        )
+        paras.append({
+            'title':    f"Conjunction: {' + '.join(names)} in {_ordinal(h)} House ({h_sig.split(',')[0]})",
+            'text':     conj_text,
+            'category': 'conjunction',
+            'icon':     '⚯',
+        })
 
-    # 3. House lord placements — brief summary
-    lord_rows = _house_lord_analysis(positions)
-    challenged = [r for r in lord_rows if r['quality'] == 'challenged']
-    strong_lords= [r for r in lord_rows if r['quality'] == 'strong']
-    if strong_lords:
-        items = '; '.join(f"H{r['house']} lord {r['lord']} in H{r['lord_house']}"
-                          for r in strong_lords[:4])
-        paras.append({'title': 'Favourable House Lord Placements',
-            'text': (f"The lords of these houses occupy kendras or trikonas, strengthening "
-                     f"those life-areas: {items}. These lords perform well in their dashas."),
-            'category': 'house_lords', 'icon': '🏠'})
-    if challenged:
-        items = '; '.join(f"H{r['house']} lord {r['lord']} in H{r['lord_house']} (dusthana)"
-                          for r in challenged[:4])
-        paras.append({'title': 'Challenged House Lord Placements',
-            'text': (f"The lords of these houses sit in dusthanas (6/8/12), creating obstacles "
-                     f"for those life-areas: {items}. Targeted remedies are advised."),
-            'category': 'house_lords', 'icon': '⚑'})
-
-    # 4. Kendra-Trikona Raja Yoga detection
-    kendra_lords  = set()
-    trikona_lords = set()
-    lagna_rasi = next((p['rasi'] for p in positions if p['name'] == 'Lagna'), 0)
+    # ── 4. YOGA-KARAKA — the most powerful planet ─────────────────────────────
+    kl, tl = set(), set()
     for h in range(1, 13):
-        si  = (lagna_rasi + h - 1) % 12
-        lord = SIGN_LORDS.get(RASI_SIGNS[si], '')
-        if h in KENDRA_HOUSES:  kendra_lords.add(lord)
-        if h in TRIKONA_HOUSES: trikona_lords.add(lord)
-    kt_yogas = kendra_lords & trikona_lords - {''}
-    if kt_yogas:
-        paras.append({'title': f"Kendra-Trikona Raja Yoga Potential ({', '.join(kt_yogas)})",
-            'text': (f"{', '.join(kt_yogas)} rule(s) both a kendra (1/4/7/10) and a trikona "
-                     f"(1/5/9), making them yoga-karakas. Their combined dasha periods are "
-                     f"exceptionally powerful for career, status, and spiritual growth."),
-            'category': 'yoga', 'icon': '👑'})
+        lord = SIGN_LORDS.get(RASI_SIGNS[(lagna_rasi + h - 1) % 12], '')
+        if h in KENDRA_HOUSES:  kl.add(lord)
+        if h in TRIKONA_HOUSES: tl.add(lord)
+    for yk in sorted(kl & tl - {''}):
+        yk_p = next((p for p in positions if p['name'] == yk), None)
+        if not yk_p: continue
+        yk_h_sig = HOUSE_KARKA.get(yk_p['house'], '').split(',')[0]
+        placement_quality = ('amplified by angular strength' if yk_p['house'] in KENDRA_HOUSES
+                             else 'blessed by trine placement' if yk_p['house'] in TRIKONA_HOUSES
+                             else 'in a challenging position — remediation recommended')
+        paras.append({
+            'title':    f"Yoga-Karaka: {yk} — Most Powerful Planet in Your Chart",
+            'text':     (
+                f"{yk} rules both a kendra and a trikona from your {lagna_sign} Lagna — "
+                f"making it your single most powerful planet, the Yoga-Karaka. "
+                f"When well-placed, it creates Raja Yoga single-handedly. "
+                f"Currently in your {_ordinal(yk_p['house'])} house ({yk_p['sign']} — {yk_h_sig}), "
+                f"its power is {placement_quality}. "
+                f"The Mahadasha of {yk} is the most pivotal period of your life — it determines "
+                f"peak career, status, wealth, and dharmic fulfillment. "
+                f"Strengthen {yk} through its specific gemstone, mantra, and charitable acts "
+                f"and never deliberately weaken it."
+            ),
+            'category': 'yoga',
+            'icon':     '👑',
+        })
 
-    # 5. Conjunctions in houses
-    house_map = {}
-    for p in positions:
-        if p['name'] == 'Lagna': continue
-        house_map.setdefault(p['house'], []).append(p['name'])
-    for h, planets in house_map.items():
-        if len(planets) >= 2:
-            h_sig = HOUSE_KARKA.get(h, '')
-            paras.append({'title': f"Conjunction in {h}th Bhava — {' + '.join(planets)}",
-                'text': (f"{' and '.join(planets)} are conjunct in the {h}th house ({h_sig}). "
-                         f"Their combined energy fuses the significations of both planets, "
-                         f"creating a powerful influence on matters of the {h}th bhava."),
-                'category': 'conjunction', 'icon': '⊕'})
-
-    # 6. Raja Yogas from API
+    # ── 5. RAJA YOGAS with cause and effect ──────────────────────────────────
     if raja_yogas:
-        paras.append({'title': f"{len(raja_yogas)} Raja Yoga(s) Detected",
-            'text': (f"The chart contains {len(raja_yogas)} Raja Yoga(s) from dharma-karma "
-                     f"lord combinations, conferring status and achievement during participating "
-                     f"planet dashas."),
-            'category': 'yoga', 'icon': '👑'})
-        for ry in raja_yogas[:5]:
-            txt = ry.get('effect') or ry.get('description', '')
-            if txt:
-                paras.append({'title': ry.get('name', 'Raja Yoga'),
-                    'text': txt[:500] + ('…' if len(txt) > 500 else ''),
-                    'category': 'yoga_detail', 'icon': '☽',
-                    'pairs': ry.get('pairs', '')})
+        for ry in raja_yogas[:4]:
+            name_txt   = ry.get('name', ry.get('type', 'Raja Yoga'))
+            desc       = str(ry.get('description', ''))[:300]
+            effect_raw = re.sub(r'<[^>]+>', ' ', str(ry.get('effect', ''))).strip()[:400]
+            paras.append({
+                'title':    f"Raja Yoga: {name_txt}",
+                'text':     (
+                    f"**Cause**: {desc if desc else name_txt + ' is present in this chart.'} "
+                    f"**Effect**: {effect_raw if effect_raw else 'This yoga confers elevated status, recognition, and prosperity — especially during the dasha periods of the planets forming this combination.'}"
+                ),
+                'category': 'yoga',
+                'icon':     '♛',
+            })
 
-    # 7. Shad Bala summary
-    if shad_bala and 'totals' in shad_bala:
-        totals = shad_bala['totals']
-        strong = [p for p, v in totals.items() if v >= 150]
-        weak   = [p for p, v in totals.items() if v < 80]
-        if strong:
-            paras.append({'title': 'Planets of Superior Strength',
-                'text': (f"{', '.join(strong)} exceed 150 Rupas in Shad Bala — they deliver "
-                         f"powerful, reliable results during their dashas and bless the houses "
-                         f"they occupy or aspect."),
-                'category': 'strength', 'icon': '💪'})
-        if weak:
-            paras.append({'title': 'Planets Requiring Remediation',
-                'text': (f"{', '.join(weak)} are below 80 Rupas threshold. Gemstone therapy, "
-                         f"mantra japa, and charity aligned with these planets can help."),
-                'category': 'strength', 'icon': '🔻'})
+    # ── 6. DOSHAS — cause, effect and remedy ─────────────────────────────────
+    DOSHA_REMEDIES = {
+        'Manglik Dosha':       'Kumbh Vivah ritual, coral gemstone, Tuesday fasting, Hanuman Chalisa.',
+        'Kala Sarpa Dosha':    'Rahu-Ketu puja, Nagpanchami worship, Trimbakeshwar temple ritual.',
+        'Guru Chandala Dosha': 'Jupiter mantra (Om Brihaspataye Namaha), yellow sapphire, Thursday fasting.',
+        'Pitru Dosha':         'Pitru Tarpan on Amavasya, feeding crows and Brahmins, charity on Saturdays.',
+        'Shrapit Dosha':       'Saturn mantra, blue sapphire, Shani Shanti puja, oil donation.',
+        'Ganda Moola Dosha':   'Nakshatra Shanti puja, specific deity worship for birth nakshatra.',
+        'Ghata Dosha':         'Ghata Shanti puja, fasting on the relevant weekday.',
+    }
+    active_doshas = {k: v for k, v in doshas.items()
+                     if 'no' not in str(v).lower() and 'not' not in str(v).lower()}
+    for dname, dtext in list(active_doshas.items())[:3]:
+        remedy   = DOSHA_REMEDIES.get(dname, 'Consult a qualified Jyotishi for personalised remediation.')
+        d_body   = str(dtext)
+        d_excerpt= d_body[:300] if len(d_body) > 50 else f'{dname} is active in this chart.'
+        paras.append({
+            'title':    f"Dosha: {dname}",
+            'text':     (
+                f"**What it is**: {d_excerpt} "
+                f"**Effect**: This karmic pattern influences the life areas ruled by the involved "
+                f"planets — challenges and imbalances are most pronounced during those planets' "
+                f"Mahadasha and Antardasha periods. "
+                f"**Remedy**: {remedy}"
+            ),
+            'category': 'dosha',
+            'icon':     '⚠',
+        })
 
-    # 8. Doshas
-    active = [k for k, v in doshas.items()
-              if 'no' not in str(v).lower() and 'not' not in str(v).lower()]
-    if active:
-        paras.append({'title': 'Doshas Present',
-            'text': (f"Active doshas detected: {', '.join(active)}. Each represents a karmic "
-                     f"pattern; a Jyotishi can prescribe personalised remediation."),
-            'category': 'dosha', 'icon': '⚠'})
+    # ── 7. KEY HOUSE LORD CHAINS ─────────────────────────────────────────────
+    for row in _house_lord_analysis(positions):
+        if row['house'] not in {1, 2, 4, 5, 7, 9, 10, 11}: continue
+        if row['quality'] not in ('strong', 'challenged'): continue
+        sig = row['signif'].split(',')[0].strip()
+        lh  = int(row['lord_house']) if str(row['lord_house']).isdigit() else 0
+        if lh == 0: continue
+        if row['quality'] == 'strong':
+            pt = 'kendra' if lh in KENDRA_HOUSES else 'trikona'
+            effect_txt = (
+                f"The {_ordinal(row['house'])} house lord ({row['lord']}) sits in a "
+                f"{pt} ({_ordinal(lh)} house) — a positive, empowered placement. "
+                f"The life areas of {sig} are naturally supported and the native tends to "
+                f"succeed here. During {row['lord']}'s Mahadasha, significant positive "
+                f"milestones in {sig} are expected with relatively less friction.")
+        else:
+            effect_txt = (
+                f"The {_ordinal(row['house'])} house lord ({row['lord']}) sits in a dusthana "
+                f"({_ordinal(lh)} house) — creating obstacles, recurring challenges, and "
+                f"potential setbacks in {sig}. The native faces karmic tests in this domain. "
+                f"With targeted remediation for {row['lord']} and sustained effort, these "
+                f"obstacles can be overcome — often building greater strength than easy placements.")
+        paras.append({
+            'title':    f"H{row['house']} ({sig}) — Lord {row['lord']} in H{lh}: {row['quality'].title()}",
+            'text':     effect_txt,
+            'category': 'house_lord',
+            'icon':     '✓' if row['quality'] == 'strong' else '⚑',
+        })
 
-    # 9. Classical text matches
+    # ── 8. CLASSICAL TEXT MATCHES ────────────────────────────────────────────
     if matched_rules:
         formula_matched = [r for r in matched_rules if r.get('formula_hits', 0) > 0]
-        paras.append({'title': f"{len(matched_rules)} Classical Rules Matched ({len(formula_matched)} formula-verified)",
-            'text': (f"Cross-referencing uploaded classical texts found {len(matched_rules)} "
-                     f"applicable rules — {len(formula_matched)} verified by direct formula "
-                     f"evaluation against this chart's positions. These provide authoritative "
-                     f"classical backing beyond algorithmic interpretation."),
-            'category': 'classical', 'icon': '📚'})
+        for rule in formula_matched[:5]:
+            cats = rule.get('categories', ['general'])
+            paras.append({
+                'title':    f"Classical Text ({cats[0].title()}): Verified Rule",
+                'text':     (
+                    f"\"{rule['text']}\" "
+                    f"[Formula-verified: {rule['formula_hits']}/{rule['formula_count']} formulas "
+                    f"match this chart. Relevance score: {rule['chart_relevance']}]"
+                ),
+                'category': 'classical',
+                'icon':     '📖',
+            })
+        if len(matched_rules) > 5:
+            paras.append({
+                'title':    f"{len(matched_rules)} Total Classical Rules Matched",
+                'text':     (
+                    f"{len(formula_matched)} are formula-verified against your actual chart positions. "
+                    f"Browse all matched rules in the Rule Library for complete classical backing."
+                ),
+                'category': 'classical',
+                'icon':     '📚',
+            })
+
     return paras
 
 # ── Page routes ─────────────────────────────────────────────────────────────
@@ -1352,6 +1765,135 @@ def api_interpret_by_id(chart_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+# ── API: Life Discussion ─────────────────────────────────────────────────────
+@app.route('/api/discuss', methods=['POST'])
+def api_discuss():
+    try:
+        data     = request.get_json(force=True)
+        message  = data.get('message', '').strip()
+        chart_id = data.get('chart_id')
+        book_ids = data.get('book_ids', [])
+
+        if not message:
+            return jsonify({'error': 'message is required'}), 400
+
+        # Resolve chart positions
+        if chart_id and chart_id in _chart_cache:
+            cached     = _chart_cache[chart_id]
+            positions  = cached['planets']
+            raja_yogas = cached.get('raja_yogas', [])
+            doshas     = cached.get('doshas', {})
+        elif 'year' in data or 'date' in data:
+            place, jd, lat, lon, tz = parse_birth_data(data)
+            positions  = get_planet_positions(jd, place)
+            raja_yogas = []
+            doshas     = {}
+        else:
+            return jsonify({'error': 'chart_id or birth data required'}), 400
+
+        # Aggregate rules from all books (or specified books)
+        all_rules = []
+        books_to_use = book_ids if book_ids else list(_book_store.keys())
+        for bid in books_to_use:
+            if bid in _book_store:
+                all_rules.extend(_book_store[bid].get('rules', []))
+
+        response_text, relevant_planets, matched_rules = _generate_discussion_response(
+            message, positions, all_rules,
+            raja_yogas=raja_yogas, doshas=doshas
+        )
+
+        return jsonify({
+            'response':         response_text,
+            'relevant_planets': relevant_planets,
+            'matched_rules':    matched_rules,
+            'book_count':       len(books_to_use),
+            'rule_count':       len(all_rules),
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── API: Rule Library ─────────────────────────────────────────────────────────
+@app.route('/api/rule-library', methods=['GET'])
+def api_rule_library():
+    """Aggregate and filter rules across all uploaded books."""
+    try:
+        planet_filter   = request.args.get('planet', '').strip()
+        sign_filter     = request.args.get('sign', '').strip()
+        house_filter    = request.args.get('house', '').strip()
+        ftype_filter    = request.args.get('formula_type', '').strip()
+        q_filter        = request.args.get('q', '').strip().lower()
+        book_filter     = request.args.get('book_id', '').strip()
+        min_score       = int(request.args.get('min_score', 2))
+        limit           = min(int(request.args.get('limit', 200)), 1000)
+
+        aggregate = []
+        books_to_search = [book_filter] if book_filter and book_filter in _book_store else list(_book_store.keys())
+
+        for bid in books_to_search:
+            store = _book_store.get(bid, {})
+            for rule in store.get('rules', []):
+                if rule.get('score', 0) < min_score: continue
+                if planet_filter and planet_filter not in rule.get('planets', []): continue
+                if sign_filter   and sign_filter   not in rule.get('signs', []):   continue
+                if house_filter  and int(house_filter) not in rule.get('houses', []): continue
+                if ftype_filter  and not any(f.get('type') == ftype_filter for f in rule.get('formulas', [])): continue
+                if q_filter      and q_filter not in rule.get('text', '').lower(): continue
+                aggregate.append({**rule, 'book_id': bid, 'book_name': store.get('filename', bid)})
+
+        aggregate.sort(key=lambda r: len(r.get('formulas',[])) * 3 + r.get('score', 0), reverse=True)
+
+        return jsonify({
+            'total':    len(aggregate),
+            'rules':    aggregate[:limit],
+            'books':    len(books_to_search),
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/rule-library/search', methods=['POST'])
+def api_rule_library_search():
+    """Match aggregated rules from multiple books against a chart."""
+    try:
+        data     = request.get_json(force=True)
+        book_ids = data.get('book_ids', list(_book_store.keys()))
+        if not book_ids:
+            book_ids = list(_book_store.keys())
+
+        # Build chart positions
+        chart_id = data.get('chart_id')
+        if chart_id and chart_id in _chart_cache:
+            positions = _chart_cache[chart_id]['planets']
+        else:
+            place, jd, lat, lon, tz = parse_birth_data(data)
+            positions = get_planet_positions(jd, place)
+
+        # Aggregate rules
+        all_rules = []
+        for bid in book_ids:
+            if bid in _book_store:
+                all_rules.extend(_book_store[bid].get('rules', []))
+
+        matched = _match_rules_to_chart(all_rules, positions)
+
+        # Annotate with book name
+        book_map = {bid: _book_store[bid].get('filename', bid) for bid in book_ids if bid in _book_store}
+        for rule in matched:
+            bid = rule.get('book_id')
+            if bid:
+                rule['book_name'] = book_map.get(bid, bid)
+
+        return jsonify({
+            'matched':     matched,
+            'total_rules': len(all_rules),
+            'match_count': len(matched),
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ── API: PDF Upload ───────────────────────────────────────────────────────────
 @app.route('/api/pdf/upload', methods=['POST'])
 def api_pdf_upload():
@@ -1598,6 +2140,14 @@ def pdf_toolkit_page():
 @app.route('/learning')
 def learning_page():
     return render_template('learning.html')
+
+@app.route('/discuss')
+def discuss_page():
+    return render_template('discuss.html')
+
+@app.route('/rule-library')
+def rule_library_page():
+    return render_template('rule_library.html')
 
 if __name__ == '__main__':
     os.makedirs('templates', exist_ok=True)
