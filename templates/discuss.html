@@ -305,5 +305,53 @@ function markdownToHtml(text) {
 }
 
 init();
+
+// ── Auto-populate birth form from shared ASTRO state and auto-load chart ───────
+(async function(){
+  const s = ASTRO.load();
+  if (!s || !s.birth) return;
+  const b = s.birth;
+  const m = {year:'dy',month:'dm',day:'dd',hour:'dhr',minute:'dmin',latitude:'dlat',longitude:'dlon',timezone:'dtz'};
+  Object.entries(m).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&b[k]!==undefined)el.value=b[k];});
+
+  if (!s.chartId) return;
+  // Try to auto-load the chart (chart_id might still be in server cache)
+  document.getElementById('chartStatus').textContent = 'Loading saved chart…';
+  try {
+    // Use chart_id to retrieve cached chart via horoscope endpoint
+    const r = await fetch('/api/horoscope', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(b)
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    chartId   = d.chart_id;
+    planets   = d.planets || [];
+    rajaYogas = d.raja_yogas || [];
+    doshas    = d.doshas || {};
+    // Update shared state with fresh chart_id
+    ASTRO.save(b, chartId, s.lagnaSign, s.lagnaInfo);
+
+    const lagna = planets.find(p => p.name === 'Lagna');
+    document.getElementById('lagnaInfo').textContent =
+      lagna ? `${lagna.sign} Lagna — ${lagna.nakshatra} pada ${lagna.nak_pada}` : '';
+
+    const strip = document.getElementById('planetStrip');
+    strip.innerHTML = planets.filter(p => p.name !== 'Lagna').map(p =>
+      `<span class="planet-pill dignity-${p.dignity}" title="${p.sign} · H${p.house} · ${p.nakshatra}">`+
+      `${p.name} H${p.house}</span>`
+    ).join('');
+
+    document.getElementById('chartPanel').style.display = 'block';
+    document.getElementById('chartStatus').textContent = `✓ ${lagna ? lagna.sign : ''} Lagna ready`;
+    document.getElementById('chartStatus').style.color = 'var(--ok)';
+
+    appendMsg('bot',
+      `✓ **${lagna ? lagna.sign : ''} Lagna chart loaded** from your last session.\n\nAsk me anything about your life — career, marriage, wealth, health, children, spiritual path — and I will trace the cause-and-effect relationships from your actual planetary positions${allBooks.length > 0 ? ' combined with ' + allBooks.length + ' uploaded classical text(s)' : ', drawing on built-in classical rules'}.`
+    );
+  } catch(e) {
+    document.getElementById('chartStatus').textContent = '';
+  }
+})();
 </script>
 {% endblock %}
