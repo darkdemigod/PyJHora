@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}KP Prashna — PyJHora{% endblock %}
+{% block content %}
+<h1>🔮 KP Prashna (Horary Astrology)</h1>
+<p style="color:var(--muted);margin-bottom:1rem">Krishnamurti Paddhati — Query Resolution Analysis</p>
+
+<div class="card">
+  <h2>Query Details</h2>
+  <div class="form-grid">
+    <div style="grid-column:1/-1">
+      <label>Your Question</label>
+      <input type="text" id="question" placeholder="e.g. Will I get the job? Will my health improve?" value="Will the venture succeed?">
+    </div>
+    <div>
+      <label>KP Score (−10 to +10)</label>
+      <input type="range" id="score" min="-10" max="10" step="0.5" value="3" oninput="document.getElementById('scoreVal').textContent=this.value">
+      <small style="color:var(--accent)" id="scoreVal">3</small>
+    </div>
+    <div>
+      <label>Query Location</label>
+      <input type="text" id="place" value="Jaipur,IN">
+    </div>
+    <div><label>Latitude</label><input type="number" id="lat" value="26.9124" step="0.0001"></div>
+    <div><label>Longitude</label><input type="number" id="lon" value="75.7873" step="0.0001"></div>
+    <div><label>Timezone</label><input type="number" id="tz" value="5.5" step="0.5"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="calculate()">
+      <span class="spinner" id="spin" style="display:none"></span> Get KP Answer
+    </button>
+  </div>
+  <div id="errBox"></div>
+</div>
+
+<div id="results" style="display:none">
+  <div class="card" id="answerBanner" style="text-align:center;padding:2rem">
+    <div id="answerText" style="font-size:3rem;font-weight:800"></div>
+    <div id="answerDesc" style="color:var(--muted);margin:.5rem 0;font-size:1rem"></div>
+    <div id="qText" style="font-style:italic;color:var(--accent3)"></div>
+  </div>
+
+  <div class="card">
+    <h2>🪐 Prashna Chart (Current Positions)</h2>
+    <div id="prashnaChart"></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+async function calculate(){
+  const sp=document.getElementById('spin'); sp.style.display='inline-block';
+  document.getElementById('errBox').innerHTML='';
+  const d=await api('/api/prashna',{
+    question:document.getElementById('question').value,
+    score:+document.getElementById('score').value,
+    place:document.getElementById('place').value,
+    latitude:+document.getElementById('lat').value,
+    longitude:+document.getElementById('lon').value,
+    timezone:+document.getElementById('tz').value
+  });
+  sp.style.display='none';
+  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+
+  const colorMap={YES:'var(--ok)',NO:'var(--err)',UNCERTAIN:'var(--warn)'};
+  const emojiMap={YES:'✅',NO:'❌',UNCERTAIN:'⚠️'};
+  document.getElementById('answerText').textContent=`${emojiMap[d.answer]||''} ${d.answer}`;
+  document.getElementById('answerText').style.color=colorMap[d.answer]||'var(--accent)';
+  document.getElementById('answerDesc').textContent=d.interpretation||'';
+  document.getElementById('qText').textContent=`"${d.question}"`;
+
+  const PS={'Sun':'☀','Moon':'🌙','Mars':'♂','Mercury':'☿','Jupiter':'♃','Venus':'♀','Saturn':'♄','Rahu':'☊','Ketu':'☋','Lagna':'↑'};
+  document.getElementById('prashnaChart').innerHTML=`<table>
+    <tr><th>Planet</th><th>Sign</th><th>House</th><th>Lon°</th></tr>
+    ${(d.prashna_chart||[]).map(p=>`<tr>
+      <td>${PS[p.name]||''} <b>${p.name}</b></td>
+      <td><span class="badge badge-info">${p.sign}</span></td>
+      <td>${p.house}</td>
+      <td>${(p.lon_in_sign||0).toFixed(2)}</td>
+    </tr>`).join('')}
+  </table>`;
+
+  document.getElementById('results').style.display='block';
+}
+</script>
+{% endblock %}

@@ -1,39 +1,36 @@
-modules = ["python-3.8", "web"]
+modules = ["web", "python-3.11"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib"]
+packages = ["exiftool", "freefont_ttf", "freetype", "ghostscript", "glibcLocales", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "mupdf", "netpbm", "openjpeg", "poppler_utils", "tcl", "tk", "zlib", "unzip"]
 
 [workflows]
-runButton = "Run Web App"
+runButton = "Project"
 
 [[workflows.workflow]]
-name = "Run"
-author = 42662888
+name = "Project"
 mode = "parallel"
+author = "agent"
 
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python src/jhora/horoscope/main.py"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python src/jhora/horoscope/main.py"
+task = "workflow.run"
+args = "Flask Server"
 
 [[workflows.workflow]]
-name = "Run Web App"
-author = 42662888
-mode = "parallel"
+name = "Flask Server"
+author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python app.py"
+args = "bash start_server.sh"
+waitForPort = 5000
 
-[[workflows.workflow]]
-name = "Run Desktop App"
-author = 42662888
-mode = "parallel"
+[workflows.workflow.metadata]
+outputType = "webview"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python app.py"
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[agent]
+expertMode = true

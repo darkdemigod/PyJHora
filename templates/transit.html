@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Live Transits — PyJHora{% endblock %}
+{% block content %}
+<h1>🌍 Live Planetary Transits</h1>
+<p style="color:var(--muted);margin-bottom:1rem">Current planetary positions — updates on demand</p>
+
+<div class="card">
+  <h2>Observer Location</h2>
+  <div class="form-grid">
+    <div><label>Place</label><input type="text" id="place" value="Jaipur,IN"></div>
+    <div><label>Latitude</label><input type="number" id="lat" value="26.9124" step="0.0001"></div>
+    <div><label>Longitude</label><input type="number" id="lon" value="75.7873" step="0.0001"></div>
+    <div><label>Timezone</label><input type="number" id="tz" value="5.5" step="0.5"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="loadTransit()">
+      <span class="spinner" id="spin" style="display:none"></span> Get Current Positions
+    </button>
+    <button class="btn btn-cyan" id="autoBtn" onclick="toggleAuto()">▶ Auto Refresh (30s)</button>
+  </div>
+  <div id="errBox"></div>
+</div>
+
+<div id="results" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+      <h2>🪐 Current Positions</h2>
+      <span id="timestamp" class="badge badge-info"></span>
+    </div>
+    <div class="panch-grid" style="margin-bottom:1rem">
+      <div class="panch-item"><div class="label">Today's Tithi</div><div class="value" id="tithi">—</div></div>
+      <div class="panch-item"><div class="label">Day of Week</div><div class="value" id="vaara">—</div></div>
+    </div>
+    <table id="transitTable">
+      <thead><tr><th>Planet</th><th>Sign</th><th>House</th><th>Longitude°</th></tr></thead>
+      <tbody id="transitBody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const PS={'Sun':'☀','Moon':'🌙','Mars':'♂','Mercury':'☿','Jupiter':'♃','Venus':'♀','Saturn':'♄','Rahu':'☊','Ketu':'☋','Lagna':'↑'};
+let autoInterval=null;
+
+async function loadTransit(){
+  const sp=document.getElementById('spin'); sp.style.display='inline-block';
+  document.getElementById('errBox').innerHTML='';
+  const d=await api('/api/transit',{
+    place:document.getElementById('place').value,
+    latitude:+document.getElementById('lat').value,
+    longitude:+document.getElementById('lon').value,
+    timezone:+document.getElementById('tz').value
+  });
+  sp.style.display='none';
+  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+
+  document.getElementById('timestamp').textContent=d.timestamp||'';
+  document.getElementById('tithi').textContent=d.tithi||'—';
+  document.getElementById('vaara').textContent=d.vaara||'—';
+
+  document.getElementById('transitBody').innerHTML=(d.planets||[]).map(p=>`<tr>
+    <td>${PS[p.name]||''} <b>${p.name}</b></td>
+    <td><span class="badge badge-info">${p.sign}</span></td>
+    <td>${p.house}</td>
+    <td>${(p.lon_in_sign||0).toFixed(4)}°</td>
+  </tr>`).join('');
+
+  document.getElementById('results').style.display='block';
+}
+
+function toggleAuto(){
+  if(autoInterval){
+    clearInterval(autoInterval); autoInterval=null;
+    document.getElementById('autoBtn').textContent='▶ Auto Refresh (30s)';
+    document.getElementById('autoBtn').className='btn btn-cyan';
+  } else {
+    loadTransit();
+    autoInterval=setInterval(loadTransit,30000);
+    document.getElementById('autoBtn').textContent='⏹ Stop Auto Refresh';
+    document.getElementById('autoBtn').className='btn btn-cyan btn-sm';
+  }
+}
+
+// Load on page open
+loadTransit();
+</script>
+{% endblock %}

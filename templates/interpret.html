@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Interpreter — Vedic Astrology{% endblock %}
+{% block content %}
+<style>
+.interp-layout{display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:820px){.interp-layout{grid-template-columns:1fr}}
+.para-card{border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:1rem 1.1rem;margin-bottom:.8rem;background:var(--card-bg,#1a1a2e);position:relative}
+.para-card.lagna     {border-left:4px solid #60a5fa}
+.para-card.dignity   {border-left:4px solid #facc15}
+.para-card.yoga,.para-card.yoga_detail{border-left:4px solid #c084fc}
+.para-card.strength  {border-left:4px solid #4ade80}
+.para-card.dosha     {border-left:4px solid #f87171}
+.para-card.classical {border-left:4px solid #fb923c}
+.para-card.planet    {border-left:4px solid #06b6d4;background:#06b6d408}
+.para-card.house_lord{border-left:4px solid #f0a500;background:#f0a50008}
+.para-card.conjunction{border-left:4px solid #ec4899;background:#ec489908}
+.para-icon{font-size:1.1rem;margin-right:.4rem}
+.para-title{font-weight:700;font-size:.95rem;margin-bottom:.35rem}
+.para-text{font-size:.85rem;line-height:1.72;color:var(--fg,#e0e0e0)}
+.para-text strong{color:var(--accent3,#06b6d4)}
+.para-pairs{font-size:.75rem;color:var(--muted,#888);margin-top:.3rem}
+/* Dignity badge inside planet cards */
+.dignity-tag{display:inline-block;font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:99px;margin-left:.4rem}
+.dignity-exalted{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
+.dignity-debilitated{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
+.dignity-own,.dignity-moolatrikona{background:#06b6d422;color:#06b6d4;border:1px solid #06b6d444}
+.dignity-neutral{background:#9090b022;color:#9090b0;border:1px solid #9090b044}
+.rule-row{border-bottom:1px solid var(--border,#2a2a3a);padding:.55rem .2rem;font-size:.82rem}
+.rule-row:last-child{border-bottom:none}
+.rule-score{display:inline-block;min-width:28px;text-align:center;background:var(--accent,#c084fc);color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .3rem;margin-right:.4rem}
+.rule-relevance{display:inline-block;min-width:28px;text-align:center;background:#fb923c;color:#111;border-radius:4px;font-weight:700;font-size:.72rem;padding:.05rem .3rem;margin-left:.3rem}
+.rule-cat{display:inline-block;padding:.08rem .4rem;border-radius:99px;background:rgba(192,132,252,.15);color:var(--accent,#c084fc);font-size:.7rem;margin-right:.2rem}
+.book-select{width:100%;margin-top:.5rem}
+.filter-bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+.filter-btn{padding:.3rem .7rem;border:1px solid var(--border,#2a2a3a);border-radius:99px;background:transparent;color:var(--muted,#888);cursor:pointer;font-size:.78rem}
+.filter-btn.active{background:var(--accent,#c084fc);color:#111;border-color:var(--accent,#c084fc)}
+</style>
+
+<h1>Deep Interpreter</h1>
+<p style="color:var(--muted,#888);margin-bottom:1.5rem">Enter birth details to receive a deep paragraph-level Vedic interpretation, optionally matched against uploaded classical texts.</p>
+
+<div class="interp-layout">
+  <!-- Left: form -->
+  <div>
+    <div class="card">
+      <h3 style="margin-bottom:1rem">Birth Details</h3>
+      <form id="interpForm" onsubmit="runInterpret(event)">
+        <div class="form-group"><label>Year</label><input class="form-control" type="number" id="iy" value="1990" min="1800" max="2100"></div>
+        <div class="form-group"><label>Month</label><input class="form-control" type="number" id="im" value="1" min="1" max="12"></div>
+        <div class="form-group"><label>Day</label><input class="form-control" type="number" id="id" value="1" min="1" max="31"></div>
+        <div class="form-group"><label>Hour (0–23)</label><input class="form-control" type="number" id="ihr" value="6" min="0" max="23"></div>
+        <div class="form-group"><label>Minute</label><input class="form-control" type="number" id="imi" value="0" min="0" max="59"></div>
+        <div class="form-group"><label>Latitude</label><input class="form-control" type="number" id="ilat" value="13.0827" step="0.0001"></div>
+        <div class="form-group"><label>Longitude</label><input class="form-control" type="number" id="ilon" value="80.2707" step="0.0001"></div>
+        <div class="form-group"><label>Timezone offset</label><input class="form-control" type="number" id="itz" value="5.5" step="0.5"></div>
+        <div class="form-group">
+          <label>Classical Book (optional)</label>
+          <select class="form-control book-select" id="bookSelect">
+            <option value="">— No book selected —</option>
+          </select>
+          <small style="color:var(--muted,#888)">Upload books in the <a href="/pdf-toolkit" style="color:var(--accent,#c084fc)">PDF Toolkit</a></small>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.5rem">Interpret Chart</button>
+        <div id="interpStatus" style="color:var(--muted,#888);font-size:.83rem;margin-top:.5rem;text-align:center"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right: results -->
+  <div>
+    <div id="interpResults" style="display:none">
+      <div id="filterBar" class="filter-bar"></div>
+      <div id="parasSection"></div>
+      <div id="rulesSection" style="margin-top:1.5rem"></div>
+    </div>
+    <div id="interpPlaceholder" style="color:var(--muted,#888);padding:2rem 0;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">🔭</div>
+      <div>Fill in birth details and click Interpret Chart</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Pre-fill chart_id from URL
+const _urlParams=new URLSearchParams(location.search);
+const _preChartId=_urlParams.get('chart_id');
+let _activeFilter='all';
+
+// Load books
+async function loadBooks(){
+  try{
+    const res=await fetch('/api/books');
+    const data=await res.json();
+    const sel=document.getElementById('bookSelect');
+    (data.books||[]).forEach(b=>{
+      const opt=document.createElement('option');
+      opt.value=b.book_id;opt.textContent=`${b.filename} (${b.pages}p, ${b.rules} rules)`;
+      sel.appendChild(opt);
+    });
+  }catch(e){}
+}
+loadBooks();
+
+async function runInterpret(e){
+  e.preventDefault();
+  const status=document.getElementById('interpStatus');
+  status.textContent='Interpreting…';
+  document.getElementById('interpPlaceholder').style.display='none';
+  document.getElementById('interpResults').style.display='none';
+
+  const book_id=document.getElementById('bookSelect').value||null;
+  const payload={
+    year:+document.getElementById('iy').value,
+    month:+document.getElementById('im').value,
+    day:+document.getElementById('id').value,
+    hour:+document.getElementById('ihr').value,
+    minute:+document.getElementById('imi').value,
+    latitude:+document.getElementById('ilat').value,
+    longitude:+document.getElementById('ilon').value,
+    timezone:+document.getElementById('itz').value,
+  };
+  if(book_id)payload.book_id=book_id;
+
+  try{
+    const res=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.error){status.textContent='❌ '+data.error;document.getElementById('interpPlaceholder').style.display='block';return;}
+    status.textContent=`✓ ${(data.paragraphs||[]).length} interpretation panels`;
+    renderResults(data);
+  }catch(err){status.textContent='❌ '+err;document.getElementById('interpPlaceholder').style.display='block';}
+}
+
+function renderResults(data){
+  const paras=data.paragraphs||[];
+  const rules=data.matched_rules||[];
+
+  // Filter bar
+  const cats=[...new Set(paras.map(p=>p.category))];
+  let fb='<button class="filter-btn active" data-cat="all" onclick="filterParas(this)">All ('+paras.length+')</button>';
+  cats.forEach(c=>{
+    const n=paras.filter(p=>p.category===c).length;
+    fb+=`<button class="filter-btn" data-cat="${c}" onclick="filterParas(this)">${catLabel(c)} (${n})</button>`;
+  });
+  document.getElementById('filterBar').innerHTML=fb;
+
+  // Paras
+  let ph='';
+  paras.forEach(p=>{
+    ph+=`<div class="para-card ${p.category||''}" data-cat="${p.category||''}">
+      <div class="para-title"><span class="para-icon">${p.icon||'•'}</span>${p.title||''}</div>
+      <div class="para-text">${p.text||''}</div>
+      ${p.pairs?`<div class="para-pairs">Planets: ${p.pairs}</div>`:''}
+    </div>`;
+  });
+  document.getElementById('parasSection').innerHTML=ph||'<p style="color:var(--muted,#888)">No interpretation paragraphs generated.</p>';
+
+  // Matched rules
+  if(rules.length){
+    let rh=`<h3 style="margin-bottom:.7rem">📚 Classical Rules Matched to This Chart (${rules.length})</h3>`;
+    rh+='<div id="ruleList">';
+    rules.forEach(r=>{
+      const cats=(r.categories||[]).map(c=>`<span class="rule-cat">${c}</span>`).join('');
+      rh+=`<div class="rule-row">
+        <span class="rule-score" title="Astrological score">${r.score}</span>
+        ${cats}
+        <span class="rule-relevance" title="Chart relevance">${r.chart_relevance}</span>
+        ${r.text||''}
+      </div>`;
+    });
+    rh+='</div>';
+    document.getElementById('rulesSection').innerHTML=rh;
+  }else{
+    document.getElementById('rulesSection').innerHTML=rules.length===0&&document.getElementById('bookSelect').value?
+      '<p style="color:var(--muted,#888)">No classical rules matched this chart from the selected book.</p>':'';
+  }
+  document.getElementById('interpResults').style.display='block';
+}
+
+function catLabel(c){
+  return{
+    lagna:'Ascendant',dignity:'Dignity',
+    planet:'Planets',house_lord:'House Lords',conjunction:'Conjunctions',
+    yoga:'Raja Yogas',yoga_detail:'Yoga Detail',
+    strength:'Strength',dosha:'Doshas',classical:'Classical'
+  }[c]||(c.charAt(0).toUpperCase()+c.slice(1));
+}
+
+function filterParas(btn){
+  const cat=btn.dataset.cat;_activeFilter=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.para-card').forEach(card=>{
+    card.style.display=(cat==='all'||card.dataset.cat===cat)?'block':'none';
+  });
+}
+
+// If chart_id pre-filled from horoscope page, load it
+if(_preChartId){
+  (async()=>{
+    const status=document.getElementById('interpStatus');
+    status.textContent='Loading chart…';
+    document.getElementById('interpPlaceholder').style.display='none';
+    try{
+      const res=await fetch('/api/interpret/'+_preChartId);
+      const data=await res.json();
+      if(!data.error){status.textContent=`✓ Loaded chart ${_preChartId}`;renderResults(data);}
+      else status.textContent='';
+    }catch(e){status.textContent='';}
+  })();
+}
+</script>
+{% endblock %}
