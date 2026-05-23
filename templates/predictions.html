@@ -2,7 +2,7 @@
 {% block title %}V4 Predictions — PyJHora{% endblock %}
 {% block content %}
 <h1>⭐ V4 Vedic Prediction Engine</h1>
-<p style="color:var(--muted);margin-bottom:1rem">AI-powered Vedic astrology predictions — Vimshottari Dasha, Marriage Timing, Yoga analysis</p>
+<p style="color:var(--muted);margin-bottom:1rem">Vimsottari Dasha, Marriage Timing, Yoga analysis — drawn from your full chart.</p>
 
 <div class="card">
   <h2>Birth Details</h2>
@@ -15,9 +15,11 @@
     <div><label>Timezone (hrs)</label><input type="number" id="timezone" value="5.5" step="0.5"></div>
   </div>
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="calculate()">
+    <button class="btn btn-primary" id="calcBtn" onclick="calculate()">
       <span class="spinner" id="spin" style="display:none"></span> Generate Predictions
     </button>
+    <a class="btn" href="/interpret">🔍 Deep Interpret</a>
+    <a class="btn btn-cyan" href="/discuss">💬 Discuss Life</a>
   </div>
   <div id="errBox"></div>
 </div>
@@ -31,41 +33,76 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-async function calculate(){
-  const sp=document.getElementById('spin'); sp.style.display='inline-block';
-  document.getElementById('errBox').innerHTML='';
-  const d=await api('/api/predictions',{
-    date:document.getElementById('date').value,
-    time:document.getElementById('time').value+':00',
-    place:document.getElementById('place').value,
-    latitude:+document.getElementById('latitude').value,
-    longitude:+document.getElementById('longitude').value,
-    timezone:+document.getElementById('timezone').value
-  });
-  sp.style.display='none';
-  if(d.error){document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;return;}
+// ── Auto-populate from shared ASTRO state ─────────────────────────────────────
+(function(){
+  const s = ASTRO.load();
+  if (!s || !s.birth) return;
+  const b = s.birth;
+  // Convert year/month/day → date string
+  if (b.year && b.month && b.day) {
+    const y = b.year, m = String(b.month).padStart(2,'0'), d = String(b.day).padStart(2,'0');
+    const dateEl = document.getElementById('date');
+    if (dateEl) dateEl.value = `${y}-${m}-${d}`;
+  }
+  if (b.hour !== undefined && b.minute !== undefined) {
+    const hr = String(b.hour).padStart(2,'0'), mn = String(b.minute).padStart(2,'0');
+    const timeEl = document.getElementById('time');
+    if (timeEl) timeEl.value = `${hr}:${mn}`;
+  }
+  if (b.latitude  !== undefined) { const el=document.getElementById('latitude');  if(el) el.value=b.latitude; }
+  if (b.longitude !== undefined) { const el=document.getElementById('longitude'); if(el) el.value=b.longitude; }
+  if (b.timezone  !== undefined) { const el=document.getElementById('timezone');  if(el) el.value=b.timezone; }
+})();
 
+async function calculate(){
+  const sp  = document.getElementById('spin');
+  const btn = document.getElementById('calcBtn');
+  sp.style.display='inline-block';
+  btn.disabled = true;
+  document.getElementById('errBox').innerHTML='';
+  document.getElementById('results').style.display='none';
+  try {
+    const d = await api('/api/predictions',{
+      date:     document.getElementById('date').value,
+      time:     document.getElementById('time').value+':00',
+      place:    document.getElementById('place').value,
+      latitude: +document.getElementById('latitude').value,
+      longitude:+document.getElementById('longitude').value,
+      timezone: +document.getElementById('timezone').value
+    });
+    if(d.error){
+      document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${d.error}</div>`;
+      return;
+    }
+    renderPredictions(d);
+  } catch(err) {
+    document.getElementById('errBox').innerHTML=`<div class="alert alert-err">⚠ ${err.message||err}</div>`;
+  } finally {
+    sp.style.display='none';
+    btn.disabled = false;
+  }
+}
+
+function renderPredictions(d){
   let html='';
 
-  // Dasha lord
   if(d.dasha_lord){
-    html+=`<div class="panch-item" style="margin-bottom:.8rem">
-      <div class="label">Current Dasha Lord</div>
-      <div class="value" style="font-size:1.3rem">${d.dasha_lord}</div>
+    html+=`<div class="panch-item" style="margin-bottom:1rem;background:var(--surface);border-radius:.5rem;padding:.8rem">
+      <div class="label">Current Maha Dasha Lord</div>
+      <div class="value" style="font-size:1.4rem;color:var(--accent)">${d.dasha_lord}</div>
     </div>`;
   }
 
-  // Prediction array
-  if(Array.isArray(d.predictions)){
-    html+=`<div style="margin-bottom:.8rem">
+  if(Array.isArray(d.predictions)&&d.predictions.length){
+    html+=`<div style="margin-bottom:1rem">
+      <h3 style="margin-bottom:.5rem">Predictions</h3>
       ${d.predictions.map(p=>`<div class="alert alert-info" style="margin-bottom:.4rem">• ${p}</div>`).join('')}
     </div>`;
   }
 
-  // Structured predictions object
   if(d.vimshottari_dasha){
     html+=`<div class="card" style="margin-bottom:.8rem">
-      <h3>Vimshottari Dasha</h3>
+      <h3>Vimsottari Dasha</h3>
       <div class="panch-grid">${Object.entries(d.vimshottari_dasha||{}).map(([k,v])=>`
         <div class="panch-item"><div class="label">${k}</div><div class="value">${typeof v==='object'?JSON.stringify(v):v}</div></div>
       `).join('')}</div>
@@ -84,24 +121,24 @@ async function calculate(){
   if(d.yogas){
     const yogaList=Array.isArray(d.yogas)?d.yogas:Object.keys(d.yogas||{});
     if(yogaList.length){
-      html+=`<div class="card"><h3>Active Yogas</h3>
-        ${yogaList.map(y=>`<div class="badge badge-ok" style="margin:.2rem">${typeof y==='object'?y.name||JSON.stringify(y):y}</div>`).join('')}
+      html+=`<div class="card" style="margin-bottom:.8rem"><h3>Active Yogas</h3>
+        <div style="margin-top:.5rem">${yogaList.map(y=>`<span class="badge badge-ok" style="margin:.2rem;display:inline-block">${typeof y==='object'?y.name||JSON.stringify(y):y}</span>`).join('')}</div>
       </div>`;
     }
   }
 
   if(d.mangal_dosha!==undefined){
-    html+=`<div class="panch-item">
+    html+=`<div class="panch-item" style="margin-bottom:.5rem">
       <div class="label">Mangal Dosha</div>
       <div class="value"><span class="badge ${d.mangal_dosha?'badge-err':'badge-ok'}">${d.mangal_dosha?'Present':'Absent'}</span></div>
     </div>`;
   }
 
   if(d.note){
-    html+=`<div class="alert alert-info">${d.note}</div>`;
+    html+=`<div class="alert alert-info" style="margin-top:.8rem">${d.note}</div>`;
   }
 
-  if(!html) html='<div class="alert alert-info">No prediction data returned.</div>';
+  if(!html) html='<div class="alert alert-info">No prediction data returned. Try the Deep Interpret page for a full analysis.</div>';
   document.getElementById('predContent').innerHTML=html;
   document.getElementById('results').style.display='block';
 }

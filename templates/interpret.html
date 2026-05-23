@@ -194,19 +194,45 @@ function filterParas(btn){
   });
 }
 
-// If chart_id pre-filled from horoscope page, load it
-if(_preChartId){
-  (async()=>{
-    const status=document.getElementById('interpStatus');
-    status.textContent='Loading chart…';
-    document.getElementById('interpPlaceholder').style.display='none';
-    try{
-      const res=await fetch('/api/interpret/'+_preChartId);
-      const data=await res.json();
-      if(!data.error){status.textContent=`✓ Loaded chart ${_preChartId}`;renderResults(data);}
-      else status.textContent='';
-    }catch(e){status.textContent='';}
-  })();
-}
+// ── Auto-populate form from shared ASTRO state ────────────────────────────────
+(function(){
+  const s=ASTRO.load();
+  if(!s||!s.birth)return;
+  const b=s.birth;
+  const m={year:'iy',month:'im',day:'id',hour:'ihr',minute:'imi',latitude:'ilat',longitude:'ilon',timezone:'itz'};
+  Object.entries(m).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&b[k]!==undefined)el.value=b[k];});
+})();
+
+// ── Auto-load chart: prefer URL param, fall back to shared ASTRO state ─────────
+(async()=>{
+  const status=document.getElementById('interpStatus');
+  const cidFromUrl  = _preChartId;
+  const cidFromState= ASTRO.load()?.chartId;
+  const cid         = cidFromUrl || cidFromState;
+  if(!cid) return;
+  status.textContent='Loading chart…';
+  document.getElementById('interpPlaceholder').style.display='none';
+  try{
+    const res=await fetch('/api/interpret/'+cid);
+    const data=await res.json();
+    if(!data.error){
+      status.textContent=`✓ ${(data.paragraphs||[]).length} interpretation panels`;
+      renderResults(data);
+    } else {
+      // chart_id not in server cache — try re-interpreting from stored birth data
+      const s=ASTRO.load();
+      if(s?.birth){
+        status.textContent='Re-calculating from birth data…';
+        const r2=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(s.birth)});
+        const d2=await r2.json();
+        if(!d2.error){
+          if(d2.chart_id) ASTRO.save(s.birth,d2.chart_id,s.lagnaSign,s.lagnaInfo);
+          status.textContent=`✓ ${(d2.paragraphs||[]).length} interpretation panels`;
+          renderResults(d2);
+        } else { status.textContent=''; document.getElementById('interpPlaceholder').style.display='block'; }
+      } else { status.textContent=''; document.getElementById('interpPlaceholder').style.display='block'; }
+    }
+  }catch(e){status.textContent='';document.getElementById('interpPlaceholder').style.display='block';}
+})();
 </script>
 {% endblock %}

@@ -111,6 +111,16 @@ tr:hover td{background:#11112a55}
 
 /* ── FOOTER ── */
 footer{background:var(--surface);border-top:1px solid var(--border);padding:.5rem 1.2rem;font-size:.75rem;color:var(--muted);text-align:center}
+
+/* ── ACTIVE CHART BAR ── */
+#activeChartBar{background:linear-gradient(90deg,#7c3aed18,#f0a50018);border-bottom:1px solid var(--border);padding:.35rem 1.2rem;display:none;align-items:center;gap:.8rem;flex-wrap:wrap;font-size:.8rem}
+#activeChartBar .acb-lagna{font-weight:700;color:var(--accent)}
+#activeChartBar .acb-id{color:var(--muted);font-size:.73rem;font-family:monospace}
+.acb-nav{display:flex;gap:.4rem;flex-wrap:wrap}
+.acb-nav a{background:var(--border);color:var(--text);border-radius:.3rem;padding:.2rem .55rem;font-size:.73rem;font-weight:600;transition:background .15s}
+.acb-nav a:hover{background:var(--accent2);color:#fff}
+#acbClear{margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:.1rem .4rem}
+#acbClear:hover{color:var(--err)}
 </style>
 {% block extra_head %}{% endblock %}
 </head>
@@ -134,12 +144,74 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:.5re
   <a href="/pdf-toolkit" {% if request.path=='/pdf-toolkit' %}class="active"{% endif %} style="color:var(--accent2)">📚 PDF Toolkit</a>
   <a href="/learning" {% if request.path=='/learning' %}class="active"{% endif %} style="color:var(--accent2)">🎓 Learning</a>
 </nav>
+<!-- Active-chart shared banner -->
+<div id="activeChartBar">
+  <span>📐 Active Chart:</span>
+  <span class="acb-lagna" id="acbLagna"></span>
+  <span class="acb-id" id="acbId"></span>
+  <div class="acb-nav">
+    <a href="/horoscope">Horoscope</a>
+    <a href="/interpret">Interpret</a>
+    <a href="/discuss">Discuss</a>
+    <a href="/predictions">Predictions</a>
+    <a href="/divisional">Divisionals</a>
+  </div>
+  <button id="acbClear" onclick="ASTRO.clear();ASTRO.hideBar()" title="Clear active chart">✕ Clear</button>
+</div>
+
 <div class="page">
 {% block content %}{% endblock %}
 </div>
 <footer>PyJHora — Vedic Astrology OS | ASTRO_OS_FULL_MASTER_ULTIMATE Build</footer>
 <script>
-// shared utilities
+// ── Shared ASTRO state (localStorage) ────────────────────────────────────────
+const ASTRO = {
+  _KEY: 'astro_chart_state',
+  save(birth, chartId, lagnaSign, lagnaInfo) {
+    try {
+      localStorage.setItem(this._KEY, JSON.stringify({
+        birth, chartId, lagnaSign, lagnaInfo, ts: Date.now()
+      }));
+    } catch(e) {}
+    this.showBar();
+  },
+  load() {
+    try { return JSON.parse(localStorage.getItem(this._KEY) || 'null'); } catch(e) { return null; }
+  },
+  clear() {
+    try { localStorage.removeItem(this._KEY); } catch(e) {}
+    this.hideBar();
+  },
+  showBar() {
+    const s = this.load();
+    if (!s) return;
+    const bar = document.getElementById('activeChartBar');
+    if (!bar) return;
+    document.getElementById('acbLagna').textContent = (s.lagnaSign||'?') + ' Lagna';
+    document.getElementById('acbId').textContent = s.lagnaInfo || '';
+    bar.style.display = 'flex';
+  },
+  hideBar() {
+    const bar = document.getElementById('activeChartBar');
+    if (bar) bar.style.display = 'none';
+  },
+  // Fill any birth form on the page using a field-id mapping
+  fillForm(map) {
+    const s = this.load();
+    if (!s || !s.birth) return false;
+    const b = s.birth;
+    Object.entries(map).forEach(([key, elId]) => {
+      const el = document.getElementById(elId);
+      if (el && b[key] !== undefined) el.value = b[key];
+    });
+    return true;
+  }
+};
+
+// Auto-show bar on every page load
+document.addEventListener('DOMContentLoaded', () => { ASTRO.showBar(); });
+
+// ── Shared utilities ──────────────────────────────────────────────────────────
 async function api(endpoint, payload){
   const r = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   return r.json();

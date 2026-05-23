@@ -79,7 +79,9 @@
     </div>
     <div style="margin-top:.9rem;display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
       <button type="submit" class="btn btn-primary">Calculate Chart</button>
-      <button type="button" class="btn" id="btnInterpret" style="display:none" onclick="openInterpret()">🔍 Deep Interpret</button>
+      <button type="button" class="btn" id="btnInterpret" style="display:none" onclick="openInterpret()">🔍 Interpret</button>
+      <button type="button" class="btn btn-cyan" id="btnDiscuss" style="display:none" onclick="window.location.href='/discuss'">💬 Discuss</button>
+      <button type="button" class="btn btn-gold" id="btnPredict" style="display:none" onclick="window.location.href='/predictions'">⭐ Predict</button>
       <span id="calcStatus" style="color:var(--muted,#888);font-size:.85rem"></span>
     </div>
   </form>
@@ -173,15 +175,22 @@ async function calcChart(e){
     const data=await res.json();
     if(data.error){status.textContent='❌ '+data.error;return;}
     _chartId=data.chart_id;_dashaLoaded=false;
-    status.textContent='✓ Chart ready (ID: '+_chartId+')';
+    // ── Save to shared state so all other tabs pick this up ──
+    const lagnaP=data.planets?.find(p=>p.name==='Lagna');
+    const lagnaSign=lagnaP?.sign||'?';
+    const lagnaInfo=lagnaP?`${lagnaP.nakshatra||''} pada ${lagnaP.nak_pada||''}`:'' ;
+    ASTRO.save(payload, _chartId, lagnaSign, lagnaInfo);
+    status.textContent='✓ '+lagnaSign+' Lagna chart ready';
     document.getElementById('resultArea').style.display='block';
     document.getElementById('btnInterpret').style.display='inline-block';
+    document.getElementById('btnDiscuss').style.display='inline-block';
+    document.getElementById('btnPredict').style.display='inline-block';
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     document.querySelector('[data-tab="planets"]').classList.add('active');
     document.getElementById('tab-planets').classList.add('active');
     renderPlanets(data);renderHouses(data);renderYogas(data);renderStrengths(data);
-  }catch(err){status.textContent='❌ '+err;}
+  }catch(err){status.textContent='❌ '+err;document.getElementById('resultArea').style.display='none';}
 }
 
 function openInterpret(){window.location.href='/interpret?chart_id='+encodeURIComponent(_chartId);}
@@ -450,6 +459,18 @@ async function loadDashas(){
     if(activeM)setTimeout(()=>{activeM.click();},100);
   }catch(err){sec.innerHTML='<p style="color:#f87171">❌ '+err+'</p>';_dashaLoaded=false;}
 }
+
+// ── Auto-populate birth form from shared ASTRO state on page load ─────────────
+(function(){
+  const s=ASTRO.load();
+  if(!s||!s.birth)return;
+  const b=s.birth;
+  const m={year:'year',month:'month',day:'day',hour:'hour',minute:'minute',latitude:'lat',longitude:'lon',timezone:'tz'};
+  Object.entries(m).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&b[k]!==undefined)el.value=b[k];});
+  if(s.chartId){
+    document.getElementById('calcStatus').textContent='Showing cached '+s.lagnaSign+' Lagna — click Calculate to refresh';
+  }
+})();
 
 function toggleEl(el,type){
   el.classList.toggle('open');
